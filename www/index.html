@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quicky | MRW Venezuela</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Librería para lectura QR en navegador Web/Local -->
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <style>
+    .bg-mrw-dark { background-color: #1a2246; }
+    .bg-mrw-card { background-color: #232c54; }
+    .border-mrw { border-color: #313d6f; }
+  </style>
+</head>
+<body class="bg-mrw-dark min-h-screen p-4 text-slate-100 font-sans">
+
+  <div class="max-w-md mx-auto bg-mrw-card rounded-3xl shadow-2xl border border-mrw p-5 space-y-4">
+    
+    <!-- Header principal -->
+    <div class="flex items-center justify-between border-b border-mrw pb-3">
+      <div class="flex items-center gap-2">
+        <span class="text-2xl">🤌⚡</span>
+        <div>
+          <h1 class="text-xl font-extrabold tracking-wide text-white">Quicky</h1>
+          <p class="text-[10px] text-slate-400 font-medium">MRW El Tigre Centro (03130)</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Menú Principal: Navegación de 2 Botones -->
+    <div class="grid grid-cols-2 gap-2 p-1 bg-slate-900/60 rounded-2xl border border-slate-700/60">
+      <button id="nav-btn-notificar" onclick="cambiarModulo('notificar')" class="py-2.5 px-3 text-xs font-bold rounded-xl bg-blue-600 text-white shadow-md transition flex items-center justify-center gap-1.5">
+        <span>💬</span> Notificar
+      </button>
+      <button id="nav-btn-buscar" onclick="cambiarModulo('buscar')" class="py-2.5 px-3 text-xs font-semibold rounded-xl text-slate-400 hover:text-white transition flex items-center justify-center gap-1.5">
+        <span>🔍</span> Buscar Guía
+      </button>
+    </div>
+
+    <!-- MÓDULO 1: NOTIFICAR A CLIENTES -->
+    <div id="modulo-notificar" class="space-y-4">
+      <div id="scan-trigger-container" class="p-5 text-center border-2 border-dashed border-blue-500/30 bg-blue-950/30 rounded-2xl space-y-3">
+        <p class="text-xs text-slate-300 font-medium">Escaneo instantáneo de etiqueta QR</p>
+        <button onclick="escanearSegunEntorno('notificar')" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2 text-sm">
+          📷 ABRIR CÁMARA
+        </button>
+        <div id="web-reader-notificar" class="hidden overflow-hidden rounded-xl border border-slate-600 mt-2"></div>
+      </div>
+
+      <button id="reset-btn-notificar" onclick="reiniciarNotificador()" class="hidden w-full bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2 text-sm">
+        🔄 Escanear otro código
+      </button>
+
+      <!-- Panel de Opciones y Resultados de Notificación -->
+      <div id="result-container-notificar" class="hidden space-y-4">
+        
+        <div class="bg-slate-900/80 p-4 rounded-2xl space-y-2 border border-slate-700/60 text-sm">
+          <div class="flex justify-between border-b border-slate-800 pb-2">
+            <span class="text-slate-400 font-medium text-xs">Guía / Tracking:</span>
+            <span id="res-guia" class="font-black text-blue-400 tracking-wider">-</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <div>
+              <p class="text-[10px] text-slate-400 uppercase font-bold">Remitente</p>
+              <p id="res-remitente" class="font-semibold text-slate-200 truncate">-</p>
+              <p id="res-tel-remitente" class="text-xs text-blue-400 font-mono">-</p>
+            </div>
+            <div>
+              <p class="text-[10px] text-slate-400 uppercase font-bold">Destinatario</p>
+              <p id="res-destinatario" class="font-semibold text-slate-200 truncate">-</p>
+              <p id="res-tel-destinatario" class="text-xs text-blue-400 font-mono">-</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-800 text-xs text-center">
+            <div class="bg-slate-800/50 p-1.5 rounded-lg">
+              <p class="text-[10px] text-slate-400 font-semibold">Peso</p>
+              <p id="res-peso" class="font-bold text-slate-200">- Kg</p>
+            </div>
+            <div class="bg-slate-800/50 p-1.5 rounded-lg">
+              <p class="text-[10px] text-slate-400 font-semibold">Monto</p>
+              <p id="res-precio" class="font-bold text-emerald-400">Bs. -</p>
+            </div>
+            <div class="bg-slate-800/50 p-1.5 rounded-lg">
+              <p class="text-[10px] text-slate-400 font-semibold">Cupones</p>
+              <p id="res-cupones" class="font-bold text-purple-400">-</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-slate-900/40 border border-slate-700/80 p-4 rounded-2xl space-y-3">
+          <h3 class="text-[11px] font-bold text-blue-400 uppercase tracking-wider">Configuración del Envío</h3>
+          
+          <div class="space-y-1">
+            <label class="block text-xs font-semibold text-slate-300">1. Clase:</label>
+            <div class="grid grid-cols-2 gap-2" id="group-clase">
+              <button type="button" onclick="seleccionarClase('COD')" class="btn-clase py-2 px-3 text-xs font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200">COD</button>
+              <button type="button" onclick="seleccionarClase('PAGADO')" class="btn-clase py-2 px-3 text-xs font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200">PAGADO</button>
+              <button type="button" onclick="seleccionarClase('CASHEA')" class="btn-clase py-2 px-3 text-xs font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200">CASHEA</button>
+              <button type="button" onclick="seleccionarClase('CORPORATIVO')" class="btn-clase py-2 px-3 text-xs font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200">CORPORATIVO</button>
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <label class="block text-xs font-semibold text-slate-300">2. Tipo:</label>
+            <div class="grid grid-cols-2 gap-2" id="group-tipo">
+              <button type="button" onclick="seleccionarTipo('Sobre')" class="btn-tipo py-2 px-3 text-xs font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200">📨 Sobre</button>
+              <button type="button" onclick="seleccionarTipo('Paquete')" class="btn-tipo py-2 px-3 text-xs font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200">📦 Paquete</button>
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <label class="block text-xs font-semibold text-slate-300">3. Adicional:</label>
+            <div class="grid grid-cols-3 gap-1.5" id="group-adicional">
+              <button type="button" onclick="seleccionarAdicional('NINGUNO')" class="btn-adicional py-2 px-1.5 text-[11px] font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200">Ninguno</button>
+              <button type="button" onclick="seleccionarAdicional('DEVOLUCION')" class="btn-adicional py-2 px-1.5 text-[11px] font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200">Devolución</button>
+              <button type="button" onclick="seleccionarAdicional('FERIADO')" class="btn-adicional py-2 px-1.5 text-[11px] font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200">Feriado</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="alerta-seleccion" class="p-3 bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs rounded-xl text-center font-medium">
+          ⚠️ Complete la configuración para activar la mensajería.
+        </div>
+
+        <div id="actions-container" class="flex flex-col gap-2.5 transition-all"></div>
+      </div>
+    </div>
+
+    <!-- MÓDULO 2: BÚSQUEDA Y CONSULTA EN API -->
+    <div id="modulo-buscar" class="hidden space-y-4">
+      <div class="bg-slate-900/60 border border-slate-700/60 p-4 rounded-2xl space-y-3">
+        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider">
+          Consulta de Guía en Sistema API
+        </label>
+        <div class="flex gap-2">
+          <input type="text" id="input-buscar-guia" placeholder="Ej: 03130123456" class="w-full bg-slate-950/80 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500">
+          <button onclick="buscarGuiaPorNumero()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition">
+            Buscar
+          </button>
+        </div>
+        <div class="relative flex py-1 items-center">
+          <div class="flex-grow border-t border-slate-800"></div>
+          <span class="flex-shrink mx-2 text-[10px] text-slate-500 font-bold uppercase">o escanear</span>
+          <div class="flex-grow border-t border-slate-800"></div>
+        </div>
+        <button onclick="escanearSegunEntorno('buscar')" class="w-full border border-blue-500/40 bg-blue-950/20 hover:bg-blue-900/40 text-blue-300 font-semibold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2">
+          📷 Escanear QR para consultar en API
+        </button>
+        <div id="web-reader-buscar" class="hidden overflow-hidden rounded-xl border border-slate-600 mt-2"></div>
+      </div>
+
+      <div id="search-loading" class="hidden text-center py-6 space-y-2">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent"></div>
+        <p class="text-xs text-slate-400 font-medium">Consultando API de MRW...</p>
+      </div>
+
+      <div id="search-result-card" class="hidden bg-slate-900/80 p-4 rounded-2xl border border-slate-700/60 space-y-3 text-sm"></div>
+    </div>
+
+    <!-- Footer -->
+    <p class="text-center text-[11px] text-slate-500 pt-2 border-t border-mrw">
+      Desarrollado por: <span class="text-slate-300 font-semibold">Rolando Palma (RolanditoDev)</span>
+    </p>
+
+  </div>
+
+  <script>
+  const MODO_ENV = 'APK'; // 'WEB' | 'APK'
+
+  let html5QrcodeScanner = null;
+  let currentData = null;
+  let claseSeleccionada = null;
+  let tipoSeleccionado = null;
+  let adicionalSeleccionado = null;
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const tag = document.getElementById('entorno-tag');
+    if (MODO_ENV === 'APK') {
+      tag.innerText = "MODO APK (NATIVO)";
+      tag.className = "text-[10px] font-bold px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+    }
+  });
+
+  function aNombrePropio(texto) {
+    if (!texto) return '';
+    return texto.toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase());
+  }
+
+  function formatearTelefonoVZLA(numero) {
+    if (!numero) return '';
+    let limpio = numero.replace(/[^0-9]/g, '');
+    if (limpio.startsWith('0')) {
+      limpio = '58' + limpio.substring(1);
+    } else if (!limpio.startsWith('58') && limpio.length === 10) {
+      limpio = '58' + limpio;
+    }
+    return limpio;
+  }
+
+  function obtenerTextoAdicional(opcion) {
+    if (opcion === 'DEVOLUCION') return "Su paquete está pronto a ser devuelto a su origen.";
+    if (opcion === 'FERIADO') {
+      const hoy = new Date();
+      const opcionesFecha = { weekday: 'long', day: '2-digit', month: 'long' };
+      let fechaFormateada = hoy.toLocaleDateString('es-ES', opcionesFecha);
+      fechaFormateada = fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
+      return `Hoy ${fechaFormateada} laboraremos hasta las 12:00 PM (medio día).`;
+    }
+    return "";
+  }
+
+  async function cambiarModulo(modulo) {
+    await detenerCamaraWeb();
+    const modNotificar = document.getElementById('modulo-notificar');
+    const modBuscar = document.getElementById('modulo-buscar');
+    const btnNotificar = document.getElementById('nav-btn-notificar');
+    const btnBuscar = document.getElementById('nav-btn-buscar');
+
+    if (modulo === 'notificar') {
+      modNotificar.classList.remove('hidden');
+      modBuscar.classList.add('hidden');
+      btnNotificar.className = "py-2.5 px-3 text-xs font-bold rounded-xl bg-blue-600 text-white shadow-md transition flex items-center justify-center gap-1.5";
+      btnBuscar.className = "py-2.5 px-3 text-xs font-semibold rounded-xl text-slate-400 hover:text-white transition flex items-center justify-center gap-1.5";
+    } else {
+      modNotificar.classList.add('hidden');
+      modBuscar.classList.remove('hidden');
+      btnBuscar.className = "py-2.5 px-3 text-xs font-bold rounded-xl bg-blue-600 text-white shadow-md transition flex items-center justify-center gap-1.5";
+      btnNotificar.className = "py-2.5 px-3 text-xs font-semibold rounded-xl text-slate-400 hover:text-white transition flex items-center justify-center gap-1.5";
+    }
+  }
+
+  async function detenerCamaraWeb() {
+    if (html5QrcodeScanner) {
+      try {
+        if (html5QrcodeScanner.isScanning) await html5QrcodeScanner.stop();
+      } catch (err) {
+        console.warn("Cámara inactiva:", err);
+      } finally {
+        html5QrcodeScanner = null;
+      }
+    }
+    document.getElementById('web-reader-notificar').classList.add('hidden');
+    document.getElementById('web-reader-buscar').classList.add('hidden');
+  }
+
+  async function escanearSegunEntorno(objetivo) {
+    await detenerCamaraWeb();
+    if (MODO_ENV === 'APK') {
+      iniciarEscanerNativo(objetivo);
+    } else {
+      iniciarEscanerWeb(objetivo);
+    }
+  }
+
+  async function iniciarEscanerNativo(objetivo) {
+    try {
+      const { BarcodeScanner } = window.Capacitor.Plugins;
+      const isAvailable = await BarcodeScanner.isGoogleBarcodeScannerModuleAvailable();
+      if (!isAvailable.available) await BarcodeScanner.installGoogleBarcodeScannerModule();
+
+      const result = await BarcodeScanner.scan();
+      if (result && result.barcodes && result.barcodes.length > 0) {
+        manejadorQRLeido(result.barcodes[0].rawValue, objetivo);
+      }
+    } catch (err) {
+      alert("Error en cámara nativa: " + JSON.stringify(err));
+    }
+  }
+
+  function iniciarEscanerWeb(objetivo) {
+    const divId = objetivo === 'notificar' ? 'web-reader-notificar' : 'web-reader-buscar';
+    const readerDiv = document.getElementById(divId);
+    readerDiv.classList.remove('hidden');
+
+    html5QrcodeScanner = new Html5Qrcode(divId);
+    html5QrcodeScanner.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: { width: 220, height: 220 } },
+      async (decodedText) => {
+        await detenerCamaraWeb();
+        manejadorQRLeido(decodedText, objetivo);
+      },
+      () => {}
+    ).catch(err => alert("Error abriendo cámara: " + err));
+  }
+
+  function manejadorQRLeido(rawText, objetivo) {
+    const dataParsed = parsearDataQR(rawText);
+    if (objetivo === 'notificar') {
+      currentData = dataParsed;
+      resetearSeleccionesUI();
+      mostrarResultadosNotificacion(currentData);
+    } else if (objetivo === 'buscar') {
+      const numeroGuia = dataParsed.guia !== 'N/A' ? dataParsed.guia : rawText.trim();
+      document.getElementById('input-buscar-guia').value = numeroGuia;
+      consultarAPI(numeroGuia);
+    }
+  }
+
+  function buscarGuiaPorNumero() {
+    const numGuia = document.getElementById('input-buscar-guia').value.trim();
+    if (!numGuia) return alert("Ingrese un número de guía válido");
+    consultarAPI(numGuia);
+  }
+
+  async function consultarAPI(numeroGuia) {
+    const loading = document.getElementById('search-loading');
+    const card = document.getElementById('search-result-card');
+    loading.classList.remove('hidden');
+    card.classList.add('hidden');
+
+    try {
+      let data;
+      if (MODO_ENV === 'APK') {
+        const { Http } = window.Capacitor.Plugins;
+        const response = await Http.request({
+          method: 'POST',
+          url: 'https://mrwve.com/api/tracking',
+          headers: { 'Content-Type': 'application/json' },
+          data: { nro_tracking: numeroGuia }
+        });
+        data = response.data;
+      } else {
+        const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://mrwve.com/api/tracking');
+        const response = await fetch(proxyUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nro_tracking: numeroGuia })
+        });
+        if (!response.ok) throw new Error(`Servidor inalcanzable (${response.status})`);
+        data = await response.json();
+      }
+
+      if (!data || !data.nro_envio) {
+        alert("No se encontraron registros para la guía especificada.");
+        loading.classList.add('hidden');
+        return;
+      }
+
+      renderizarDatosAPI(data);
+      loading.classList.add('hidden');
+      card.classList.remove('hidden');
+    } catch (error) {
+      loading.classList.add('hidden');
+      alert("Error de conexión con MRW: " + error.message);
+    }
+  }
+
+  function renderizarDatosAPI(data) {
+    const card = document.getElementById('search-result-card');
+    let modalidadTexto = data.descripcion === "CD" ? "Cobro a Destino (COD)" : "Pago en Origen (Pagado)";
+    const tipoPaqueteTexto = data.tipo_paquete ? (data.tipo_paquete.charAt(0).toUpperCase() + data.tipo_paquete.slice(1)) : "No especificado";
+
+    let ultimoEstatus = "Sin registro";
+    let fechaHoraUltimoEstatus = "N/A";
+    let etiquetaEstado = "CONSULTADO";
+    
+    if (Array.isArray(data.tracking) && data.tracking.length > 0) {
+      const ultimoMovimiento = data.tracking[data.tracking.length - 1];
+      etiquetaEstado = ultimoMovimiento.estatus || "CONSULTADO";
+      const ubicacion = ultimoMovimiento.agencia || ultimoMovimiento.estado || '';
+      ultimoEstatus = `${ultimoMovimiento.estatus} ${ubicacion ? '— ' + ubicacion : ''}`;
+      fechaHoraUltimoEstatus = ultimoMovimiento.fecha || ultimoMovimiento.fecha_scan || "N/A";
+    }
+
+    card.innerHTML = `
+      <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+        <div>
+          <p class="text-[10px] text-slate-400 font-bold uppercase">N° de Guía</p>
+          <p class="font-black text-blue-400 tracking-wider text-base">${data.nro_envio}</p>
+        </div>
+        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+          ${etiquetaEstado.toUpperCase()}
+        </span>
+      </div>
+      <div class="grid grid-cols-2 gap-2 text-xs pt-1">
+        <div class="bg-slate-800/40 p-2 rounded-xl">
+          <p class="text-[10px] text-slate-400 font-bold uppercase">Tipo / Peso</p>
+          <p class="text-slate-200 font-semibold">📦 ${tipoPaqueteTexto} (${data.peso || '0'} Kg)</p>
+        </div>
+        <div class="bg-slate-800/40 p-2 rounded-xl">
+          <p class="text-[10px] text-slate-400 font-bold uppercase">Modalidad</p>
+          <p class="text-amber-400 font-semibold">💳 ${modalidadTexto}</p>
+        </div>
+      </div>
+      <div class="space-y-0.5 text-xs">
+        <p class="text-[10px] text-slate-400 font-bold uppercase">Destinatario:</p>
+        <p class="text-slate-200 font-medium">${aNombrePropio(data.destinatario) || 'N/A'}</p>
+      </div>
+      <div class="grid grid-cols-2 gap-2 text-xs border-t border-slate-800 pt-2">
+        <div>
+          <p class="text-slate-400 font-semibold text-[10px] uppercase">Origen</p>
+          <p class="text-slate-300 font-medium truncate">${data.agencia_origen || 'N/A'}</p>
+        </div>
+        <div>
+          <p class="text-slate-400 font-semibold text-[10px] uppercase">Destino</p>
+          <p class="text-slate-300 font-medium truncate">${data.agencia_destino || 'N/A'}</p>
+        </div>
+      </div>
+      <div class="bg-blue-950/40 border border-blue-500/30 p-2.5 rounded-xl space-y-1 text-xs">
+        <div class="flex justify-between items-center">
+          <p class="text-[10px] text-blue-300 font-bold uppercase">Último Movimiento Registrado:</p>
+          <p class="text-[10px] text-slate-400 font-mono">${fechaHoraUltimoEstatus}</p>
+        </div>
+        <p class="text-slate-200 font-semibold">${ultimoEstatus}</p>
+      </div>
+    `;
+  }
+
+  function parsearDataQR(cadena) {
+    const limpio = cadena.trim();
+    const lineas = limpio.split('\n');
+    const datosLinea = lineas[lineas.length - 1].trim();
+    const columnas = datosLinea.split(';');
+
+    if (columnas.length > 25) {
+      return {
+        guia: columnas[0] || 'N/A',
+        remitente_nombre: columnas[3] || 'Remitente',
+        remitente_telefono: columnas[4] || '',
+        destinatario_nombre: columnas[8] || 'Destinatario',
+        destinatario_telefono: columnas[9] || '',
+        peso: columnas[22] || '0.00',
+        precio: columnas[29] || '0.00',
+        cupones: columnas[30] || '0'
+      };
+    }
+
+    try {
+      const json = JSON.parse(cadena);
+      return {
+        guia: json.guia || json.tracking || 'N/A',
+        remitente_nombre: json.remitente || 'Remitente',
+        remitente_telefono: json.remitente_telefono || '',
+        destinatario_nombre: json.destinatario || json.nombre || 'Cliente',
+        destinatario_telefono: json.telefono || json.destinatario_telefono || '',
+        peso: json.peso || '0.00',
+        precio: json.precio || '0.00',
+        cupones: json.cupones || '0'
+      };
+    } catch (e) {
+      return {
+        guia: limpio,
+        remitente_nombre: 'Remitente',
+        remitente_telefono: '',
+        destinatario_nombre: 'Cliente',
+        destinatario_telefono: '',
+        peso: '0.00',
+        precio: '0.00',
+        cupones: '0'
+      };
+    }
+  }
+
+  function resetearSeleccionesUI() {
+    claseSeleccionada = null;
+    tipoSeleccionado = null;
+    adicionalSeleccionado = null;
+    document.querySelectorAll('.btn-clase, .btn-tipo, .btn-adicional').forEach(btn => {
+      btn.className = btn.className.replace('bg-blue-600', 'bg-slate-800').replace('text-white font-bold', 'text-slate-200');
+    });
+    validarYActualizarBotones();
+  }
+
+  function seleccionarClase(v) { 
+    claseSeleccionada = v; 
+    actualizarGrupoUI('#group-clase .btn-clase', v); 
+  }
+  
+  function seleccionarTipo(v) { 
+    tipoSeleccionado = v; 
+    actualizarGrupoUI('#group-tipo .btn-tipo', v); 
+  }
+  
+  function seleccionarAdicional(v) {
+    adicionalSeleccionado = v;
+    actualizarGrupoUI('#group-adicional .btn-adicional', v);
+  }
+
+  function actualizarGrupoUI(selector, valorBuscado) {
+    document.querySelectorAll(selector).forEach(btn => {
+      const matchExacto = btn.getAttribute('onclick').includes(`'${valorBuscado}'`);
+      if (matchExacto) {
+        btn.classList.remove('bg-slate-800', 'text-slate-200');
+        btn.classList.add('bg-blue-600', 'text-white', 'font-bold');
+      } else {
+        btn.classList.remove('bg-blue-600', 'text-white', 'font-bold');
+        btn.classList.add('bg-slate-800', 'text-slate-200');
+      }
+    });
+    validarYActualizarBotones();
+  }
+
+  function mostrarResultadosNotificacion(data) {
+    document.getElementById('res-guia').innerText = data.guia;
+    document.getElementById('res-remitente').innerText = aNombrePropio(data.remitente_nombre);
+    document.getElementById('res-tel-remitente').innerText = data.remitente_telefono || 'Sin teléfono';
+    document.getElementById('res-destinatario').innerText = aNombrePropio(data.destinatario_nombre);
+    document.getElementById('res-tel-destinatario').innerText = data.destinatario_telefono || 'Sin teléfono';
+    document.getElementById('res-peso').innerText = `${data.peso} Kg`;
+    document.getElementById('res-precio').innerText = `Bs. ${data.precio}`;
+    document.getElementById('res-cupones').innerText = data.cupones;
+
+    validarYActualizarBotones();
+    document.getElementById('result-container-notificar').classList.remove('hidden');
+    document.getElementById('scan-trigger-container').classList.add('hidden');
+    document.getElementById('reset-btn-notificar').classList.remove('hidden');
+  }
+
+  function validarYActualizarBotones() {
+    const actions = document.getElementById('actions-container');
+    const alerta = document.getElementById('alerta-seleccion');
+
+    if (!claseSeleccionada || !tipoSeleccionado || !adicionalSeleccionado) {
+      actions.classList.add('opacity-40', 'pointer-events-none');
+      alerta.classList.remove('hidden');
+      actions.innerHTML = '';
+      return;
+    }
+
+    actions.classList.remove('opacity-40', 'pointer-events-none');
+    alerta.classList.add('hidden');
+    generarBotonesMensajeria(currentData, claseSeleccionada, tipoSeleccionado, adicionalSeleccionado);
+  }
+
+  function generarBotonesMensajeria(data, claseEnvio, tipoEnvio, adicionalEnvio) {
+    const actions = document.getElementById('actions-container');
+    actions.innerHTML = '';
+
+    const guiaCorta = data.guia ? data.guia.toString().slice(0, 2) : 'N/A';
+    const nombreDestinatario = aNombrePropio(data.destinatario_nombre);
+    const nombreRemitente = aNombrePropio(data.remitente_nombre);
+
+    let detallesPaquete = `• Peso: ${data.peso} Kg`;
+    if (claseEnvio === 'COD') detallesPaquete += `\n• Monto a pagar: Bs. ${data.precio}`;
+    if (claseEnvio === 'COD' || claseEnvio === 'PAGADO') detallesPaquete += `\n• Cupones: ${data.cupones}`;
+
+    const textoExtra = obtenerTextoAdicional(adicionalEnvio);
+    if (textoExtra) detallesPaquete += `\n\n📌 ${textoExtra.trim()}`;
+
+    const tipoYClase = `${tipoEnvio} (${claseEnvio})`;
+
+    if (data.destinatario_telefono) {
+      const phoneDest = formatearTelefonoVZLA(data.destinatario_telefono);
+
+      const plantillaWA_Dest = `¡Hola ${nombreDestinatario}! 👋\n\nLe escribimos de *MRW El Tigre Centro* (2da Carrera Sur, Edificio Hana).\n\nLe notificamos que su *${tipoYClase}* con guía 🏷️ *${guiaCorta}* se encuentra listo para ser retirado en oficina.\n\n📋 *Detalles del envío:*\n${detallesPaquete}\n\n`;
+
+      const plantillaSMS_Dest = `Hola ${nombreDestinatario}! Le escribimos de la Agencia MRW El Tigre Centro (2da Carrera Sur, Edificio Hana): Su ${tipoYClase} guia ${guiaCorta} se encuentra listo para ser retirado en oficina.\n\nDetalles:\n${detallesPaquete}`;
+
+      actions.appendChild(crearBotonApp(`💬 WhatsApp Destinatario`, `https://wa.me/${phoneDest}?text=${encodeURIComponent(plantillaWA_Dest)}`, 'bg-emerald-600 hover:bg-emerald-500 text-white'));
+      actions.appendChild(crearBotonApp(`📱 SMS Destinatario`, `sms:${phoneDest}?body=${encodeURIComponent(plantillaSMS_Dest)}`, 'bg-blue-600 hover:bg-blue-500 text-white'));
+    }
+
+    if (data.remitente_telefono) {
+      const phoneRem = formatearTelefonoVZLA(data.remitente_telefono);
+      const plantillaWA_Rem = `Hola ${nombreRemitente}, le escribimos de *MRW El Tigre Centro*.\n\nLe notificamos que el envío *${tipoYClase}* con guía 🏷️ *${guiaCorta}* consignado a *${nombreDestinatario}* no fue retirado y ha sido devuelto a origen.\n\n📋 *Detalles del envío:*\n${detallesPaquete}`;
+
+      actions.appendChild(crearBotonApp(`💬 WhatsApp Remitente`, `https://wa.me/${phoneRem}?text=${encodeURIComponent(plantillaWA_Rem)}`, 'bg-teal-600 hover:bg-teal-500 text-white'));
+    }
+  }
+
+  function crearBotonApp(texto, url, clasesColor) {
+    const btn = document.createElement('a');
+    btn.href = url;
+    btn.target = "_blank";
+    btn.className = `w-full font-bold py-3 px-4 rounded-xl text-center shadow-lg flex items-center justify-center gap-2 transition text-sm ${clasesColor}`;
+    btn.innerHTML = texto;
+    return btn;
+  }
+
+  function reiniciarNotificador() {
+    document.getElementById('reset-btn-notificar').classList.add('hidden');
+    document.getElementById('result-container-notificar').classList.add('hidden');
+    document.getElementById('scan-trigger-container').classList.remove('hidden');
+    resetearSeleccionesUI();
+    escanearSegunEntorno('notificar');
+  }
+  </script>
+</body>
+</html>
