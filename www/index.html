@@ -21,7 +21,7 @@
             <h1 id="app-title" class="text-xl font-extrabold tracking-wide text-white">Quicky Pro</h1>
             <!-- <span id="entorno-tag" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">MODO WEB</span> -->
           </div>
-          <p id="app-subtitle" class="text-[10px] text-slate-400 font-medium">MRW El Tigre (03020)</p>
+          <p id="app-subtitle" class="text-[10px] text-slate-400 font-medium">MRW El Tigre Centro (03130)</p>
         </div>
       </div>
       <!-- Botón Modo Día / Nocturno -->
@@ -136,7 +136,7 @@
           Consulta de Guía en Sistema API
         </label>
         <div class="flex gap-2">
-          <input type="text" id="input-buscar-guia" placeholder="Ej: 03020123456" class="w-full bg-slate-950/80 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500">
+          <input type="text" id="input-buscar-guia" placeholder="Ej: 03130123456" class="w-full bg-slate-950/80 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500">
           <button onclick="buscarGuiaPorNumero()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition">
             Buscar
           </button>
@@ -689,9 +689,9 @@
     if (data.destinatario_telefono) {
       const phoneDest = formatearTelefonoVZLA(data.destinatario_telefono);
 
-      const plantillaWA_Dest = `¡Hola ${nombreDestinatario}! 👋\n\nLe escribimos de *MRW El Tigre* (Calle 18 Sur, Edificio Los Geranios).\n\nLe notificamos que su *${tipoYClase}* con guía 🏷️ *${guiaCorta}* se encuentra listo para ser retirado en oficina.\n\n📋 *Detalles del envío:*\n${detallesPaquete}\n\n`;
+      const plantillaWA_Dest = `¡Hola ${nombreDestinatario}! 👋\n\nLe escribimos de *MRW El Tigre Centro* (2da Carrera Sur, Edificio Hana).\n\nLe notificamos que su *${tipoYClase}* con guía 🏷️ *${guiaCorta}* se encuentra listo para ser retirado en oficina.\n\n📋 *Detalles del envío:*\n${detallesPaquete}\n\n`;
 
-      const plantillaSMS_Dest = `Hola ${nombreDestinatario}! Le escribimos de la Agencia MRW El Tigre (Calle 18 Sur, Edificio Los Geranios): Su ${tipoYClase} guia ${guiaCorta} se encuentra listo para ser retirado en oficina.\n\nDetalles:\n${detallesPaquete}`;
+      const plantillaSMS_Dest = `Hola ${nombreDestinatario}! Le escribimos de la Agencia MRW El Tigre Centro (2da Carrera Sur, Edificio Hana): Su ${tipoYClase} guia ${guiaCorta} se encuentra listo para ser retirado en oficina.\n\nDetalles:\n${detallesPaquete}`;
 
       actions.appendChild(crearBotonApp(`💬 WhatsApp Destinatario`, `https://wa.me/${phoneDest}?text=${encodeURIComponent(plantillaWA_Dest)}`, 'bg-emerald-600 hover:bg-emerald-500 text-white'));
       actions.appendChild(crearBotonApp(`📱 SMS Destinatario`, `sms:${phoneDest}?body=${encodeURIComponent(plantillaSMS_Dest)}`, 'bg-blue-600 hover:bg-blue-500 text-white'));
@@ -699,7 +699,7 @@
 
     if (data.remitente_telefono) {
       const phoneRem = formatearTelefonoVZLA(data.remitente_telefono);
-      const plantillaWA_Rem = `Hola ${nombreRemitente}, le escribimos de *MRW El Tigre*.\n\nLe notificamos que el envío *${tipoYClase}* con guía 🏷️ *${guiaCorta}* consignado a *${nombreDestinatario}* no fue retirado y ha sido devuelto a origen.\n\n📋 *Detalles del envío:*\n${detallesPaquete}`;
+      const plantillaWA_Rem = `Hola ${nombreRemitente}, le escribimos de *MRW El Tigre Centro*.\n\nLe notificamos que el envío *${tipoYClase}* con guía 🏷️ *${guiaCorta}* consignado a *${nombreDestinatario}* no fue retirado y ha sido devuelto a origen.\n\n📋 *Detalles del envío:*\n${detallesPaquete}`;
 
       actions.appendChild(crearBotonApp(`💬 WhatsApp Remitente`, `https://wa.me/${phoneRem}?text=${encodeURIComponent(plantillaWA_Rem)}`, 'bg-teal-600 hover:bg-teal-500 text-white'));
     }
