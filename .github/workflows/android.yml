@@ -53,5 +53,5 @@ jobs:
       - name: Subir APK Generada
         uses: actions/upload-artifact@v4
         with:
-          name: Quicky-03130-APK
+          name: Quicky-03020-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
