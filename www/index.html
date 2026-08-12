@@ -7,29 +7,31 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Librería para lectura QR en navegador Web/Local -->
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-  <style>
-    .bg-mrw-dark { background-color: #1a2246; }
-    .bg-mrw-card { background-color: #232c54; }
-    .border-mrw { border-color: #313d6f; }
-  </style>
 </head>
-<body class="bg-mrw-dark min-h-screen p-4 text-slate-100 font-sans">
+<body id="app-body" class="bg-slate-900 min-h-screen p-4 text-slate-100 font-sans transition-colors duration-300">
 
-  <div class="max-w-md mx-auto bg-mrw-card rounded-3xl shadow-2xl border border-mrw p-5 space-y-4">
+  <div id="main-card" class="max-w-md mx-auto bg-slate-800 rounded-3xl shadow-2xl border border-slate-700/80 p-5 space-y-4 transition-colors duration-300">
     
-    <!-- Header principal -->
-    <div class="flex items-center justify-between border-b border-mrw pb-3">
+    <!-- Header principal con Modo Nocturno / Día -->
+    <div class="flex items-center justify-between border-b border-slate-700/60 pb-3">
       <div class="flex items-center gap-2">
         <span class="text-2xl">🤌⚡</span>
         <div>
-          <h1 class="text-xl font-extrabold tracking-wide text-white">Quicky</h1>
-          <p class="text-[10px] text-slate-400 font-medium">MRW El Tigre Centro (03130)</p>
+          <div class="flex items-center gap-2">
+            <h1 id="app-title" class="text-xl font-extrabold tracking-wide text-white">Quicky Pro</h1>
+            <!-- <span id="entorno-tag" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">MODO WEB</span> -->
+          </div>
+          <p id="app-subtitle" class="text-[10px] text-slate-400 font-medium">MRW El Tigre Centro (03130)</p>
         </div>
       </div>
+      <!-- Botón Modo Día / Nocturno -->
+      <button id="theme-toggle-btn" onclick="toggleTheme()" class="p-2 rounded-xl bg-slate-700/80 hover:bg-slate-600 border border-slate-600 text-amber-400 transition flex items-center justify-center text-sm shadow">
+        🌙
+      </button>
     </div>
 
     <!-- Menú Principal: Navegación de 2 Botones -->
-    <div class="grid grid-cols-2 gap-2 p-1 bg-slate-900/60 rounded-2xl border border-slate-700/60">
+    <div id="nav-container" class="grid grid-cols-2 gap-2 p-1 bg-slate-900/60 rounded-2xl border border-slate-700/60">
       <button id="nav-btn-notificar" onclick="cambiarModulo('notificar')" class="py-2.5 px-3 text-xs font-bold rounded-xl bg-blue-600 text-white shadow-md transition flex items-center justify-center gap-1.5">
         <span>💬</span> Notificar
       </button>
@@ -41,7 +43,7 @@
     <!-- MÓDULO 1: NOTIFICAR A CLIENTES -->
     <div id="modulo-notificar" class="space-y-4">
       <div id="scan-trigger-container" class="p-5 text-center border-2 border-dashed border-blue-500/30 bg-blue-950/30 rounded-2xl space-y-3">
-        <p class="text-xs text-slate-300 font-medium">Escaneo instantáneo de etiqueta QR</p>
+        <p id="scan-subtitle" class="text-xs text-slate-300 font-medium">Escaneo instantáneo de etiqueta QR</p>
         <button onclick="escanearSegunEntorno('notificar')" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2 text-sm">
           📷 ABRIR CÁMARA
         </button>
@@ -55,7 +57,7 @@
       <!-- Panel de Opciones y Resultados de Notificación -->
       <div id="result-container-notificar" class="hidden space-y-4">
         
-        <div class="bg-slate-900/80 p-4 rounded-2xl space-y-2 border border-slate-700/60 text-sm">
+        <div id="data-card-notificar" class="bg-slate-900/80 p-4 rounded-2xl space-y-2 border border-slate-700/60 text-sm">
           <div class="flex justify-between border-b border-slate-800 pb-2">
             <span class="text-slate-400 font-medium text-xs">Guía / Tracking:</span>
             <span id="res-guia" class="font-black text-blue-400 tracking-wider">-</span>
@@ -88,11 +90,11 @@
           </div>
         </div>
 
-        <div class="bg-slate-900/40 border border-slate-700/80 p-4 rounded-2xl space-y-3">
+        <div id="config-card-notificar" class="bg-slate-900/40 border border-slate-700/80 p-4 rounded-2xl space-y-3">
           <h3 class="text-[11px] font-bold text-blue-400 uppercase tracking-wider">Configuración del Envío</h3>
           
           <div class="space-y-1">
-            <label class="block text-xs font-semibold text-slate-300">1. Clase:</label>
+            <label id="lbl-clase" class="block text-xs font-semibold text-slate-300">1. Clase:</label>
             <div class="grid grid-cols-2 gap-2" id="group-clase">
               <button type="button" onclick="seleccionarClase('COD')" class="btn-clase py-2 px-3 text-xs font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200">COD</button>
               <button type="button" onclick="seleccionarClase('PAGADO')" class="btn-clase py-2 px-3 text-xs font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200">PAGADO</button>
@@ -102,7 +104,7 @@
           </div>
 
           <div class="space-y-1">
-            <label class="block text-xs font-semibold text-slate-300">2. Tipo:</label>
+            <label id="lbl-tipo" class="block text-xs font-semibold text-slate-300">2. Tipo:</label>
             <div class="grid grid-cols-2 gap-2" id="group-tipo">
               <button type="button" onclick="seleccionarTipo('Sobre')" class="btn-tipo py-2 px-3 text-xs font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200">📨 Sobre</button>
               <button type="button" onclick="seleccionarTipo('Paquete')" class="btn-tipo py-2 px-3 text-xs font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200">📦 Paquete</button>
@@ -110,7 +112,7 @@
           </div>
 
           <div class="space-y-1">
-            <label class="block text-xs font-semibold text-slate-300">3. Adicional:</label>
+            <label id="lbl-adicional" class="block text-xs font-semibold text-slate-300">3. Adicional:</label>
             <div class="grid grid-cols-3 gap-1.5" id="group-adicional">
               <button type="button" onclick="seleccionarAdicional('NINGUNO')" class="btn-adicional py-2 px-1.5 text-[11px] font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200">Ninguno</button>
               <button type="button" onclick="seleccionarAdicional('DEVOLUCION')" class="btn-adicional py-2 px-1.5 text-[11px] font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200">Devolución</button>
@@ -129,8 +131,8 @@
 
     <!-- MÓDULO 2: BÚSQUEDA Y CONSULTA EN API -->
     <div id="modulo-buscar" class="hidden space-y-4">
-      <div class="bg-slate-900/60 border border-slate-700/60 p-4 rounded-2xl space-y-3">
-        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider">
+      <div id="search-card" class="bg-slate-900/60 border border-slate-700/60 p-4 rounded-2xl space-y-3">
+        <label id="lbl-buscar" class="block text-xs font-bold text-slate-300 uppercase tracking-wider">
           Consulta de Guía en Sistema API
         </label>
         <div class="flex gap-2">
@@ -159,9 +161,9 @@
     </div>
 
     <!-- Footer -->
-    <p class="text-center text-[11px] text-slate-500 pt-2 border-t border-mrw">
-      Desarrollado por: <span class="text-slate-300 font-semibold">Rolando Palma (RolanditoDev)</span>
-    </p>
+      <p id="app-footer" class="text-center text-xs text-slate-300 font-medium pt-3 border-t border-slate-700/60 transition-colors duration-300">
+        Desarrollado por: <span id="app-author" class="text-white font-extrabold text-sm tracking-wide">Rolando Palma (RolanditoDev)</span>
+      </p>
 
   </div>
 
@@ -173,14 +175,85 @@
   let claseSeleccionada = null;
   let tipoSeleccionado = null;
   let adicionalSeleccionado = null;
+  let isDarkMode = true;
 
-  document.addEventListener("DOMContentLoaded", () => {
+  /*document.addEventListener("DOMContentLoaded", () => {
     const tag = document.getElementById('entorno-tag');
-    if (MODO_ENV === 'APK') {
-      tag.innerText = "MODO APK (NATIVO)";
-      tag.className = "text-[10px] font-bold px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+    if (tag) {
+      if (MODO_ENV === 'APK') {
+        tag.innerText = "MODO APK (NATIVO)";
+        tag.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+      }
     }
-  });
+  });*/
+
+  function toggleTheme() {
+  isDarkMode = !isDarkMode;
+  const body = document.getElementById('app-body');
+  const card = document.getElementById('main-card');
+  const toggleBtn = document.getElementById('theme-toggle-btn');
+  const title = document.getElementById('app-title');
+  const subtitle = document.getElementById('app-subtitle');
+  const dataCard = document.getElementById('data-card-notificar');
+  const configCard = document.getElementById('config-card-notificar');
+  const searchCard = document.getElementById('search-card');
+
+  // Elementos del footer
+  const footer = document.getElementById('app-footer');
+  const author = document.getElementById('app-author');
+
+  // Elementos con texto adaptable
+  const textDarkTarget = document.querySelectorAll('#res-remitente, #res-destinatario, #res-peso, #lbl-clase, #lbl-tipo, #lbl-adicional, #lbl-buscar, #scan-subtitle');
+
+  if (!isDarkMode) {
+    // === MODO DÍA (CLARO) ===
+    body.className = "bg-slate-100 min-h-screen p-4 text-slate-900 font-sans transition-colors duration-300";
+    card.className = "max-w-md mx-auto bg-white rounded-3xl shadow-xl border border-slate-200 p-5 space-y-4 transition-colors duration-300";
+    toggleBtn.innerText = "☀️";
+    toggleBtn.className = "p-2 rounded-xl bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-600 transition flex items-center justify-center text-sm shadow";
+    
+    title.className = "text-xl font-extrabold tracking-wide text-slate-900";
+    subtitle.className = "text-[10px] text-slate-600 font-medium";
+
+    dataCard.className = "bg-slate-50 p-4 rounded-2xl space-y-2 border border-slate-200 text-sm text-slate-800";
+    configCard.className = "bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-3";
+    searchCard.className = "bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-3";
+
+    // Footer en Modo Claro (Texto oscuro y destacado)
+    footer.className = "text-center text-xs text-slate-700 font-semibold pt-3 border-t border-slate-200 transition-colors duration-300";
+    author.className = "text-slate-950 font-black text-sm tracking-wide";
+
+    // Cambiar letras claras a oscuras
+    textDarkTarget.forEach(el => {
+      el.classList.remove('text-slate-200', 'text-slate-300');
+      el.classList.add('text-slate-900', 'font-semibold');
+    });
+
+  } else {
+    // === MODO NOCHE (OSCURO) ===
+    body.className = "bg-slate-900 min-h-screen p-4 text-slate-100 font-sans transition-colors duration-300";
+    card.className = "max-w-md mx-auto bg-slate-800 rounded-3xl shadow-2xl border border-slate-700/80 p-5 space-y-4 transition-colors duration-300";
+    toggleBtn.innerText = "🌙";
+    toggleBtn.className = "p-2 rounded-xl bg-slate-700/80 hover:bg-slate-600 border border-slate-600 text-amber-400 transition flex items-center justify-center text-sm shadow";
+    
+    title.className = "text-xl font-extrabold tracking-wide text-white";
+    subtitle.className = "text-[10px] text-slate-400 font-medium";
+
+    dataCard.className = "bg-slate-900/80 p-4 rounded-2xl space-y-2 border border-slate-700/60 text-sm text-slate-100";
+    configCard.className = "bg-slate-900/40 border border-slate-700/80 p-4 rounded-2xl space-y-3";
+    searchCard.className = "bg-slate-900/60 border border-slate-700/60 p-4 rounded-2xl space-y-3";
+
+    // Footer en Modo Oscuro (Texto blanco/gris claro de alto contraste)
+    footer.className = "text-center text-xs text-slate-300 font-medium pt-3 border-t border-slate-700/60 transition-colors duration-300";
+    author.className = "text-white font-extrabold text-sm tracking-wide";
+
+    // Restaurar letras a tonos claros
+    textDarkTarget.forEach(el => {
+      el.classList.remove('text-slate-900');
+      el.classList.add('text-slate-200');
+    });
+  }
+  }
 
   function aNombrePropio(texto) {
     if (!texto) return '';
@@ -312,10 +385,9 @@
 
     try {
       let data;
-      if (MODO_ENV === 'APK') {
-        const { Http } = window.Capacitor.Plugins;
-        const response = await Http.request({
-          method: 'POST',
+      if (MODO_ENV === 'APK' && window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.CapacitorHttp) {
+        const { CapacitorHttp } = window.Capacitor.Plugins;
+        const response = await CapacitorHttp.post({
           url: 'https://mrwve.com/api/tracking',
           headers: { 'Content-Type': 'application/json' },
           data: { nro_tracking: numeroGuia }
