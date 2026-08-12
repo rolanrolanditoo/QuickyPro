@@ -379,44 +379,54 @@
 
   async function consultarAPI(numeroGuia) {
     const loading = document.getElementById('search-loading');
-    const card = document.getElementById('search-result-card');
-    loading.classList.remove('hidden');
-    card.classList.add('hidden');
+  const card = document.getElementById('search-result-card');
+  loading.classList.remove('hidden');
+  card.classList.add('hidden');
 
-    try {
-      let data;
-      if (MODO_ENV === 'APK' && window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.CapacitorHttp) {
-        const { CapacitorHttp } = window.Capacitor.Plugins;
-        const response = await CapacitorHttp.post({
-          url: 'https://mrwve.com/api/tracking',
-          headers: { 'Content-Type': 'application/json' },
-          data: { nro_tracking: numeroGuia }
-        });
-        data = response.data;
-      } else {
-        const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://mrwve.com/api/tracking');
-        const response = await fetch(proxyUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ nro_tracking: numeroGuia })
-        });
-        if (!response.ok) throw new Error(`Servidor inalcanzable (${response.status})`);
-        data = await response.json();
-      }
-
-      if (!data || !data.nro_envio) {
-        alert("No se encontraron registros para la guía especificada.");
-        loading.classList.add('hidden');
-        return;
-      }
-
-      renderizarDatosAPI(data);
-      loading.classList.add('hidden');
-      card.classList.remove('hidden');
-    } catch (error) {
-      loading.classList.add('hidden');
-      alert("Error de conexión con MRW: " + error.message);
+  try {
+    let response;
+    
+    if (MODO_ENV === 'APK') {
+      // Petición estándar nativa (Android no sufre por CORS)
+      response = await fetch('https://mrwve.com/api/tracking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ nro_tracking: numeroGuia })
+      });
+    } else {
+      // Petición mediante Proxy para entorno local/Web
+      const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://mrwve.com/api/tracking');
+      response = await fetch(proxyUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ nro_tracking: numeroGuia })
+      });
     }
+
+    if (!response.ok) throw new Error(`Servidor inalcanzable (${response.status})`);
+    
+    const data = await response.json();
+
+    // Comprobación de respuesta
+    if (!data || !data.nro_envio) {
+      alert("No se encontraron registros para la guía especificada.");
+      loading.classList.add('hidden');
+      return;
+    }
+
+    renderizarDatosAPI(data);
+    loading.classList.add('hidden');
+    card.classList.remove('hidden');
+  } catch (error) {
+    loading.classList.add('hidden');
+    alert("Error de conexión con MRW: " + error.message);
+  }
   }
 
   function renderizarDatosAPI(data) {
