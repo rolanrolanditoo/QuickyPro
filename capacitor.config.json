@@ -1,5 +1,12 @@
 {
   "appId": "com.quicky.mrw03130",
   "appName": "Quicky 03130",
-  "webDir": "www"
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https",
+    "allowNavigation": [
+      "mrwve.com",
+      "*.mrwve.com"
+    ]
+  }
 }
