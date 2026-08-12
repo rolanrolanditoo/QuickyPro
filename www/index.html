@@ -435,9 +435,50 @@
     }
   }
 
+  function formatearFecha12H(fechaStr) {
+    if (!fechaStr || fechaStr === 'N/A') return 'N/A';
+    
+    // Limpiar y parsear la cadena de fecha
+    const fechaObj = new Date(fechaStr.replace(/-/g, '/'));
+    if (isNaN(fechaObj.getTime())) return fechaStr; // Si no se puede parsear, retorna la cadena original
+
+    const dia = String(fechaObj.getDate()).padStart(2, '0');
+    const mes = String(fechaObj.getMonth() + 1).padStart(2, '0');
+    const anio = fechaObj.getFullYear();
+
+    let horas = fechaObj.getHours();
+    const minutos = String(fechaObj.getMinutes()).padStart(2, '0');
+    const ampm = horas >= 12 ? 'PM' : 'AM';
+
+    horas = horas % 12;
+    horas = horas ? horas : 12; // La hora '0' se convierte en '12'
+    const horasStr = String(horas).padStart(2, '0');
+
+    return `${dia}/${mes}/${anio} ${horasStr}:${minutos} ${ampm}`;
+  }
+
   function renderizarDatosAPI(data) {
     const card = document.getElementById('search-result-card');
-    let modalidadTexto = data.descripcion === "CD" ? "Cobro a Destino (COD)" : "Pago en Origen (Pagado)";
+    
+    // Normalizar la modalidad según los distintos formatos que retorna la API
+    let modalidadTexto = "No especificado";
+    const desc = (data.descripcion || '').toUpperCase();
+    const tipo = (data.tipo_envio || '').toLowerCase();
+
+    if (desc === "CD" || tipo.includes("cobro") || tipo.includes("cod")) {
+      modalidadTexto = "Cobro a Destino (COD)";
+    } else if (tipo.includes("pago en or")) {
+      modalidadTexto = "Pago en Origen (Pagado)";
+    } else if (data.tipo_envio) {
+      modalidadTexto = data.tipo_envio;
+    }
+
+    // Verificar si aplica Cashea / Corporativo mediante el número alterno
+    const tieneNumAlterno = data.num_alterno && data.num_alterno.trim() !== '' && data.num_alterno.trim().toUpperCase() !== 'N/A';
+    const badgeCasheaCorp = tieneNumAlterno 
+      ? `<span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-purple-500/20 text-purple-300 border border-purple-500/40 ml-1">CASHEA / CORP</span>` 
+      : '';
+
     const tipoPaqueteTexto = data.tipo_paquete ? (data.tipo_paquete.charAt(0).toUpperCase() + data.tipo_paquete.slice(1)) : "No especificado";
 
     let ultimoEstatus = "Sin registro";
@@ -449,7 +490,10 @@
       etiquetaEstado = ultimoMovimiento.estatus || "CONSULTADO";
       const ubicacion = ultimoMovimiento.agencia || ultimoMovimiento.estado || '';
       ultimoEstatus = `${ultimoMovimiento.estatus} ${ubicacion ? '— ' + ubicacion : ''}`;
-      fechaHoraUltimoEstatus = ultimoMovimiento.fecha || ultimoMovimiento.fecha_scan || "N/A";
+      
+      // Formatear la fecha a DD/MM/AAAA hh:mm AM/PM
+      const rawFecha = ultimoMovimiento.fecha || ultimoMovimiento.fecha_scan || "N/A";
+      fechaHoraUltimoEstatus = formatearFecha12H(rawFecha);
     }
 
     card.innerHTML = `
@@ -462,6 +506,7 @@
           ${etiquetaEstado.toUpperCase()}
         </span>
       </div>
+      
       <div class="grid grid-cols-2 gap-2 text-xs pt-1">
         <div class="bg-slate-800/40 p-2 rounded-xl">
           <p class="text-[10px] text-slate-400 font-bold uppercase">Tipo / Peso</p>
@@ -469,13 +514,24 @@
         </div>
         <div class="bg-slate-800/40 p-2 rounded-xl">
           <p class="text-[10px] text-slate-400 font-bold uppercase">Modalidad</p>
-          <p class="text-amber-400 font-semibold">💳 ${modalidadTexto}</p>
+          <p class="text-amber-400 font-semibold flex items-center flex-wrap">
+            💳 ${modalidadTexto} ${badgeCasheaCorp}
+          </p>
         </div>
       </div>
+
+      ${data.descripcion && data.descripcion !== "CD" ? `
+      <div class="bg-slate-800/30 p-2 rounded-xl text-xs space-y-0.5 border border-slate-700/40">
+        <p class="text-[10px] text-slate-400 font-bold uppercase">Descripción de Mercancía:</p>
+        <p class="text-slate-200 font-medium leading-relaxed">${data.descripcion}</p>
+      </div>
+      ` : ''}
+
       <div class="space-y-0.5 text-xs">
         <p class="text-[10px] text-slate-400 font-bold uppercase">Destinatario:</p>
         <p class="text-slate-200 font-medium">${aNombrePropio(data.destinatario) || 'N/A'}</p>
       </div>
+
       <div class="grid grid-cols-2 gap-2 text-xs border-t border-slate-800 pt-2">
         <div>
           <p class="text-slate-400 font-semibold text-[10px] uppercase">Origen</p>
@@ -486,6 +542,7 @@
           <p class="text-slate-300 font-medium truncate">${data.agencia_destino || 'N/A'}</p>
         </div>
       </div>
+
       <div class="bg-blue-950/40 border border-blue-500/30 p-2.5 rounded-xl space-y-1 text-xs">
         <div class="flex justify-between items-center">
           <p class="text-[10px] text-blue-300 font-bold uppercase">Último Movimiento Registrado:</p>
