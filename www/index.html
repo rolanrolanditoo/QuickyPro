@@ -42,7 +42,7 @@
 
     <!-- MÓDULO 1: NOTIFICAR A CLIENTES -->
     <div id="modulo-notificar" class="space-y-4">
-          <!-- 1. Contenedor para abrir cámara / lector QR web -->
+      <!-- 1. Contenedor para abrir cámara / lector QR web -->
       <div id="scan-trigger-container" class="p-5 text-center border-2 border-dashed border-blue-500/30 bg-blue-950/30 rounded-2xl space-y-3">
         <p id="scan-subtitle" class="text-xs text-slate-300 font-medium">Escaneo instantáneo de etiqueta QR</p>
         <button onclick="escanearSegunEntorno('notificar')" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2 text-sm">
@@ -171,10 +171,30 @@
     </div>
 
     <!-- Footer -->
-      <p id="app-footer" class="text-center text-xs text-slate-300 font-medium pt-3 border-t border-slate-700/60 transition-colors duration-300">
-        Desarrollado por: <span id="app-author" class="text-white font-extrabold text-sm tracking-wide">Rolando Palma (RolanditoDev)</span>
-      </p>
+    <p id="app-footer" class="text-center text-xs text-slate-300 font-medium pt-3 border-t border-slate-700/60 transition-colors duration-300">
+      Desarrollado por: <span id="app-author" class="text-white font-extrabold text-sm tracking-wide">Rolando Palma (RolanditoDev)</span>
+    </p>
 
+  </div>
+
+  <!-- UI Flotante sobre la cámara para cancelar -->
+  <div id="scanner-overlay" class="hidden fixed inset-0 z-50 flex flex-col justify-between p-6 pointer-events-none">
+    <div class="flex justify-between items-center pointer-events-auto">
+      <span class="bg-slate-900/80 text-slate-200 text-xs px-3 py-1.5 rounded-full border border-slate-700/80 font-medium">
+        📷 Escaneando código QR...
+      </span>
+      <button onclick="detenerEscanerNativo()" class="bg-red-600 hover:bg-red-500 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-2xl flex items-center gap-1 active:scale-95 transition">
+        ✖ Cancelar
+      </button>
+    </div>
+
+    <div class="self-center w-64 h-64 border-2 border-dashed border-blue-400/80 rounded-3xl bg-blue-500/5"></div>
+
+    <div class="text-center pointer-events-auto">
+      <button onclick="detenerEscanerNativo()" class="bg-slate-900/90 hover:bg-slate-800 text-slate-200 font-bold py-3 px-6 rounded-2xl text-xs border border-slate-700 shadow-2xl transition">
+        🔙 Volver a la aplicación
+      </button>
+    </div>
   </div>
 
   <script>
@@ -190,7 +210,6 @@
 
   let input_guia = document.getElementById('input-buscar-guia');
   input_guia.placeholder = `00000${CODE_AGENCIA}00000`;
-  
 
   let html5QrcodeScanner = null;
   let currentData = null;
@@ -199,73 +218,64 @@
   let adicionalSeleccionado = null;
   let isDarkMode = true;
 
-
   function toggleTheme() {
-  isDarkMode = !isDarkMode;
-  const body = document.getElementById('app-body');
-  const card = document.getElementById('main-card');
-  const toggleBtn = document.getElementById('theme-toggle-btn');
-  const title = document.getElementById('app-title');
-  const subtitle = document.getElementById('app-subtitle');
-  const dataCard = document.getElementById('data-card-notificar');
-  const configCard = document.getElementById('config-card-notificar');
-  const searchCard = document.getElementById('search-card');
+    isDarkMode = !isDarkMode;
+    const body = document.getElementById('app-body');
+    const card = document.getElementById('main-card');
+    const toggleBtn = document.getElementById('theme-toggle-btn');
+    const title = document.getElementById('app-title');
+    const subtitle = document.getElementById('app-subtitle');
+    const dataCard = document.getElementById('data-card-notificar');
+    const configCard = document.getElementById('config-card-notificar');
+    const searchCard = document.getElementById('search-card');
 
-  // Elementos del footer
-  const footer = document.getElementById('app-footer');
-  const author = document.getElementById('app-author');
+    const footer = document.getElementById('app-footer');
+    const author = document.getElementById('app-author');
 
-  // Elementos con texto adaptable
-  const textDarkTarget = document.querySelectorAll('#res-remitente, #res-destinatario, #res-peso, #lbl-clase, #lbl-tipo, #lbl-adicional, #lbl-buscar, #scan-subtitle');
+    const textDarkTarget = document.querySelectorAll('#res-remitente, #res-destinatario, #res-peso, #lbl-clase, #lbl-tipo, #lbl-adicional, #lbl-buscar, #scan-subtitle');
 
-  if (!isDarkMode) {
-    // === MODO DÍA (CLARO) ===
-    body.className = "bg-slate-100 min-h-screen p-4 text-slate-900 font-sans transition-colors duration-300";
-    card.className = "max-w-md mx-auto bg-white rounded-3xl shadow-xl border border-slate-200 p-5 space-y-4 transition-colors duration-300";
-    toggleBtn.innerText = "☀️";
-    toggleBtn.className = "p-2 rounded-xl bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-600 transition flex items-center justify-center text-sm shadow";
-    
-    title.className = "text-xl font-extrabold tracking-wide text-slate-900";
-    subtitle.className = "text-[10px] text-slate-600 font-medium";
+    if (!isDarkMode) {
+      body.className = "bg-slate-100 min-h-screen p-4 text-slate-900 font-sans transition-colors duration-300";
+      card.className = "max-w-md mx-auto bg-white rounded-3xl shadow-xl border border-slate-200 p-5 space-y-4 transition-colors duration-300";
+      toggleBtn.innerText = "☀️";
+      toggleBtn.className = "p-2 rounded-xl bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-600 transition flex items-center justify-center text-sm shadow";
+      
+      title.className = "text-xl font-extrabold tracking-wide text-slate-900";
+      subtitle.className = "text-[10px] text-slate-600 font-medium";
 
-    dataCard.className = "bg-slate-50 p-4 rounded-2xl space-y-2 border border-slate-200 text-sm text-slate-800";
-    configCard.className = "bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-3";
-    searchCard.className = "bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-3";
+      dataCard.className = "bg-slate-50 p-4 rounded-2xl space-y-2 border border-slate-200 text-sm text-slate-800";
+      configCard.className = "bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-3";
+      searchCard.className = "bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-3";
 
-    // Footer en Modo Claro (Texto oscuro y destacado)
-    footer.className = "text-center text-xs text-slate-700 font-semibold pt-3 border-t border-slate-200 transition-colors duration-300";
-    author.className = "text-slate-950 font-black text-sm tracking-wide";
+      footer.className = "text-center text-xs text-slate-700 font-semibold pt-3 border-t border-slate-200 transition-colors duration-300";
+      author.className = "text-slate-950 font-black text-sm tracking-wide";
 
-    // Cambiar letras claras a oscuras
-    textDarkTarget.forEach(el => {
-      el.classList.remove('text-slate-200', 'text-slate-300');
-      el.classList.add('text-slate-900', 'font-semibold');
-    });
+      textDarkTarget.forEach(el => {
+        el.classList.remove('text-slate-200', 'text-slate-300');
+        el.classList.add('text-slate-900', 'font-semibold');
+      });
 
-  } else {
-    // === MODO NOCHE (OSCURO) ===
-    body.className = "bg-slate-900 min-h-screen p-4 text-slate-100 font-sans transition-colors duration-300";
-    card.className = "max-w-md mx-auto bg-slate-800 rounded-3xl shadow-2xl border border-slate-700/80 p-5 space-y-4 transition-colors duration-300";
-    toggleBtn.innerText = "🌙";
-    toggleBtn.className = "p-2 rounded-xl bg-slate-700/80 hover:bg-slate-600 border border-slate-600 text-amber-400 transition flex items-center justify-center text-sm shadow";
-    
-    title.className = "text-xl font-extrabold tracking-wide text-white";
-    subtitle.className = "text-[10px] text-slate-400 font-medium";
+    } else {
+      body.className = "bg-slate-900 min-h-screen p-4 text-slate-100 font-sans transition-colors duration-300";
+      card.className = "max-w-md mx-auto bg-slate-800 rounded-3xl shadow-2xl border border-slate-700/80 p-5 space-y-4 transition-colors duration-300";
+      toggleBtn.innerText = "🌙";
+      toggleBtn.className = "p-2 rounded-xl bg-slate-700/80 hover:bg-slate-600 border border-slate-600 text-amber-400 transition flex items-center justify-center text-sm shadow";
+      
+      title.className = "text-xl font-extrabold tracking-wide text-white";
+      subtitle.className = "text-[10px] text-slate-400 font-medium";
 
-    dataCard.className = "bg-slate-900/80 p-4 rounded-2xl space-y-2 border border-slate-700/60 text-sm text-slate-100";
-    configCard.className = "bg-slate-900/40 border border-slate-700/80 p-4 rounded-2xl space-y-3";
-    searchCard.className = "bg-slate-900/60 border border-slate-700/60 p-4 rounded-2xl space-y-3";
+      dataCard.className = "bg-slate-900/80 p-4 rounded-2xl space-y-2 border border-slate-700/60 text-sm text-slate-100";
+      configCard.className = "bg-slate-900/40 border border-slate-700/80 p-4 rounded-2xl space-y-3";
+      searchCard.className = "bg-slate-900/60 border border-slate-700/60 p-4 rounded-2xl space-y-3";
 
-    // Footer en Modo Oscuro (Texto blanco/gris claro de alto contraste)
-    footer.className = "text-center text-xs text-slate-300 font-medium pt-3 border-t border-slate-700/60 transition-colors duration-300";
-    author.className = "text-white font-extrabold text-sm tracking-wide";
+      footer.className = "text-center text-xs text-slate-300 font-medium pt-3 border-t border-slate-700/60 transition-colors duration-300";
+      author.className = "text-white font-extrabold text-sm tracking-wide";
 
-    // Restaurar letras a tonos claros
-    textDarkTarget.forEach(el => {
-      el.classList.remove('text-slate-900');
-      el.classList.add('text-slate-200');
-    });
-  }
+      textDarkTarget.forEach(el => {
+        el.classList.remove('text-slate-900');
+        el.classList.add('text-slate-200');
+      });
+    }
   }
 
   function aNombrePropio(texto) {
@@ -344,46 +354,55 @@
     try {
       const { BarcodeScanner } = window.Capacitor.Plugins;
 
-      // Solicitar permiso de cámara al SO
       const status = await BarcodeScanner.checkPermission({ force: true });
       if (!status.granted) {
         alert("Se requieren permisos de cámara para escanear.");
         return;
       }
 
-      // Ocultar la interfaz Web para mostrar el visor nativo de la cámara
       BarcodeScanner.hideBackground();
       document.body.classList.add("bg-transparent");
       document.getElementById("main-card").classList.add("hidden");
+      document.getElementById("scanner-overlay").classList.remove("hidden");
 
-      // Iniciar el escáner del sistema
       const result = await BarcodeScanner.startScan();
 
-      // Restablecer interfaz tras capturar
-      BarcodeScanner.showBackground();
-      document.body.classList.remove("bg-transparent");
-      document.getElementById("main-card").classList.remove("hidden");
+      restaurarInterfazWeb();
 
       if (result && result.hasContent) {
         manejadorQRLeido(result.content, objetivo);
       }
     } catch (err) {
-      // Restablecer la interfaz siempre
-      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.BarcodeScanner) {
-        window.Capacitor.Plugins.BarcodeScanner.showBackground();
-      }
-      document.body.classList.remove("bg-transparent");
-      document.getElementById("main-card").classList.remove("hidden");
+      restaurarInterfazWeb();
 
-      // Detectar si fue una cancelación del usuario para cerrar silenciosamente
       const errorMsg = (err.message || JSON.stringify(err) || '').toLowerCase();
       if (errorMsg.includes('canceled') || errorMsg.includes('cancelled') || errorMsg.includes('user canceled')) {
-        return; // Cierra la cámara sin mostrar ningún alert
+        return;
       }
 
-      // Si es un error real diferente a cancelar, mostrar la alerta
       alert("Error en cámara nativa: " + (err.message || JSON.stringify(err)));
     }
+  }
+
+  async function detenerEscanerNativo() {
+    try {
+      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.BarcodeScanner) {
+        await window.Capacitor.Plugins.BarcodeScanner.stopScan();
+      }
+    } catch (e) {
+      console.warn("Deteniendo escáner:", e);
+    } finally {
+      restaurarInterfazWeb();
+    }
+  }
+
+  function restaurarInterfazWeb() {
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.BarcodeScanner) {
+      window.Capacitor.Plugins.BarcodeScanner.showBackground();
+    }
+    document.body.classList.remove("bg-transparent");
+    document.getElementById("main-card").classList.remove("hidden");
+    document.getElementById("scanner-overlay").classList.add("hidden");
   }
 
   function iniciarEscanerWeb(objetivo) {
@@ -403,16 +422,44 @@
     ).catch(err => alert("Error abriendo cámara: " + err));
   }
 
-  function manejadorQRLeido(rawText, objetivo) {
+  function esEnlaceURL(texto) {
+    const patronURL = /^(https?:\/\/|www\.)[^\s/$.?#].[^\s]*$/i;
+    return patronURL.test(texto.trim());
+  }
+
+  async function manejadorQRLeido(rawText, objetivo) {
+    const textoLimpio = rawText.trim();
+
+    if (esEnlaceURL(textoLimpio)) {
+      await manejarErrorEscaneo("No se admiten enlaces URL en las etiquetas.", objetivo);
+      return;
+    }
+
     const dataParsed = parsearDataQR(rawText);
+
+    const esGuiaValida = dataParsed.guia && dataParsed.guia !== 'N/A' && dataParsed.guia.length >= 6;
+    if (!esGuiaValida) {
+      await manejarErrorEscaneo("QR no válido. Asegúrese de escanear una etiqueta de envío de MRW.", objetivo);
+      return;
+    }
+
     if (objetivo === 'notificar') {
       currentData = dataParsed;
       resetearSeleccionesUI();
       mostrarResultadosNotificacion(currentData);
     } else if (objetivo === 'buscar') {
-      const numeroGuia = dataParsed.guia !== 'N/A' ? dataParsed.guia : rawText.trim();
-      document.getElementById('input-buscar-guia').value = numeroGuia;
-      consultarAPI(numeroGuia);
+      document.getElementById('input-buscar-guia').value = dataParsed.guia;
+      consultarAPI(dataParsed.guia);
+    }
+  }
+
+  async function manejarErrorEscaneo(mensaje, objetivo) {
+    alert("⚠️ " + mensaje);
+
+    if (MODO_ENV === 'APK') {
+      iniciarEscanerNativo(objetivo);
+    } else {
+      iniciarEscanerWeb(objetivo);
     }
   }
 
@@ -420,15 +467,11 @@
     const inputEl = document.getElementById('input-buscar-guia');
     const numGuia = inputEl.value.trim();
 
-    // Validar que contenga exactamente 15 dígitos numéricos
     if (!/^\d{15}$/.test(numGuia)) {
       return alert("El número de guía debe contener exactamente 15 dígitos.");
     }
 
-    // Limpiar el campo de entrada inmediatamente
     inputEl.value = '';
-
-    // Ejecutar la consulta con el número capturado
     consultarAPI(numGuia);
   }
 
@@ -441,7 +484,6 @@
     try {
       let data;
 
-      // Si estamos en entorno APK, usamos el cliente HTTP nativo de Capacitor
       if (MODO_ENV === 'APK' && window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.CapacitorHttp) {
         const { CapacitorHttp } = window.Capacitor.Plugins;
 
@@ -454,11 +496,9 @@
           data: { nro_tracking: numeroGuia }
         });
 
-        // CapacitorHttp parsea el JSON automáticamente en response.data
         data = typeof response.data === 'string' ? JSON.parse(response.data) : response.data;
 
       } else {
-        // Entorno Web/Local usando proxy para evitar CORS
         const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://mrwve.com/api/tracking');
         const response = await fetch(proxyUrl, {
           method: 'POST',
@@ -473,7 +513,6 @@
         data = await response.json();
       }
 
-      // Comprobación de respuesta
       if (!data || (!data.nro_envio && !data.nro_tracking)) {
         alert("No se encontraron registros para la guía especificada.");
         loading.classList.add('hidden');
@@ -493,9 +532,8 @@
   function formatearFecha12H(fechaStr) {
     if (!fechaStr || fechaStr === 'N/A') return 'N/A';
     
-    // Limpiar y parsear la cadena de fecha
     const fechaObj = new Date(fechaStr.replace(/-/g, '/'));
-    if (isNaN(fechaObj.getTime())) return fechaStr; // Si no se puede parsear, retorna la cadena original
+    if (isNaN(fechaObj.getTime())) return fechaStr;
 
     const dia = String(fechaObj.getDate()).padStart(2, '0');
     const mes = String(fechaObj.getMonth() + 1).padStart(2, '0');
@@ -506,7 +544,7 @@
     const ampm = horas >= 12 ? 'PM' : 'AM';
 
     horas = horas % 12;
-    horas = horas ? horas : 12; // La hora '0' se convierte en '12'
+    horas = horas ? horas : 12;
     const horasStr = String(horas).padStart(2, '0');
 
     return `${dia}/${mes}/${anio} ${horasStr}:${minutos} ${ampm}`;
@@ -515,12 +553,10 @@
   function renderizarDatosAPI(data) {
     const card = document.getElementById('search-result-card');
     
-    // Normalizar la modalidad según los distintos formatos que retorna la API
     let modalidadTexto = "No especificado";
     const desc = (data.descripcion || '').toUpperCase();
     const tipo = (data.tipo_envio || '').toLowerCase();
 
-    // Evaluar estrictamente si es Cobro a Destino
     const esCOD = desc === "CD" || tipo.includes("cobro") || tipo.includes("cod");
 
     if (esCOD) {
@@ -531,7 +567,6 @@
       modalidadTexto = data.tipo_envio;
     }
 
-    // Se muestra la etiqueta CASHEA / CORP solo si existe num_alterno Y NO es una guía de Cobro a Destino
     const tieneNumAlterno = data.num_alterno && data.num_alterno.trim() !== '' && data.num_alterno.trim().toUpperCase() !== 'N/A';
     const badgeCasheaCorp = (tieneNumAlterno && !esCOD)
       ? `<span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-purple-500/20 text-purple-300 border border-purple-500/40 ml-1">CASHEA / CORP</span>` 
@@ -549,7 +584,6 @@
       const ubicacion = ultimoMovimiento.agencia || ultimoMovimiento.estado || '';
       ultimoEstatus = `${ultimoMovimiento.estatus} ${ubicacion ? '— ' + ubicacion : ''}`;
       
-      // Formatear la fecha a DD/MM/AAAA hh:mm AM/PM
       const rawFecha = ultimoMovimiento.fecha || ultimoMovimiento.fecha_scan || "N/A";
       fechaHoraUltimoEstatus = formatearFecha12H(rawFecha);
     }
