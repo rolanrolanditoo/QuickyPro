@@ -24,7 +24,7 @@ jobs:
           java-version: '17'
 
       - name: Instalar Dependencias Web
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Generar Entorno Android NATIVO
         run: |
