@@ -19,7 +19,6 @@
         <div>
           <div class="flex items-center gap-2">
             <h1 id="app-title" class="text-xl font-extrabold tracking-wide text-white">Quicky Pro</h1>
-            <!-- <span id="entorno-tag" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">MODO WEB</span> -->
           </div>
           <p id="app-subtitle" class="text-[10px] text-slate-400 font-medium">MRW</p>
         </div>
@@ -44,7 +43,7 @@
     <div id="modulo-notificar" class="space-y-4">
       <!-- 1. Contenedor para abrir cámara / lector QR web -->
       <div id="scan-trigger-container" class="p-5 text-center border-2 border-dashed border-blue-500/30 bg-blue-950/30 rounded-2xl space-y-3">
-        <p id="scan-subtitle" class="text-xs text-slate-300 font-medium">Escaneo instantáneo de etiqueta QR</p>
+        <p id="scan-subtitle" class="text-xs text-slate-300 font-medium">Escaneo de QR</p>
         <button onclick="escanearSegunEntorno('notificar')" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2 text-sm">
           📷 ABRIR CÁMARA
         </button>
@@ -181,7 +180,7 @@
   <div id="scanner-overlay" class="hidden fixed inset-0 z-50 flex flex-col justify-between p-6 pointer-events-none">
     <div class="flex justify-between items-center pointer-events-auto">
       <span class="bg-slate-900/80 text-slate-200 text-xs px-3 py-1.5 rounded-full border border-slate-700/80 font-medium">
-        📷 Escaneando código QR...
+        📷 Escaneando QR...
       </span>
       <button onclick="detenerEscanerNativo()" class="bg-red-600 hover:bg-red-500 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-2xl flex items-center gap-1 active:scale-95 transition">
         ✖ Cancelar
@@ -192,7 +191,7 @@
 
     <div class="text-center pointer-events-auto">
       <button onclick="detenerEscanerNativo()" class="bg-slate-900/90 hover:bg-slate-800 text-slate-200 font-bold py-3 px-6 rounded-2xl text-xs border border-slate-700 shadow-2xl transition">
-        🔙 Volver a la aplicación
+        🔙 Volver
       </button>
     </div>
   </div>
@@ -320,6 +319,13 @@
       btnNotificar.className = "py-2.5 px-3 text-xs font-bold rounded-xl bg-blue-600 text-white shadow-md transition flex items-center justify-center gap-1.5";
       btnBuscar.className = "py-2.5 px-3 text-xs font-semibold rounded-xl text-slate-400 hover:text-white transition flex items-center justify-center gap-1.5";
     } else {
+      // Al tocar la pestaña "Buscar Guía" se limpia el input y se enfoca
+      const inputGuia = document.getElementById('input-buscar-guia');
+      if (inputGuia) {
+        inputGuia.value = '';
+        inputGuia.focus();
+      }
+
       modNotificar.classList.add('hidden');
       modBuscar.classList.remove('hidden');
       btnBuscar.className = "py-2.5 px-3 text-xs font-bold rounded-xl bg-blue-600 text-white shadow-md transition flex items-center justify-center gap-1.5";
@@ -361,7 +367,10 @@
       }
 
       BarcodeScanner.hideBackground();
+      // Remover clases de fondo del body para permitir ver la cámara
+      document.body.classList.remove("bg-slate-900", "bg-slate-100");
       document.body.classList.add("bg-transparent");
+      
       document.getElementById("main-card").classList.add("hidden");
       document.getElementById("scanner-overlay").classList.remove("hidden");
 
@@ -401,6 +410,9 @@
       window.Capacitor.Plugins.BarcodeScanner.showBackground();
     }
     document.body.classList.remove("bg-transparent");
+    // Restaurar el color de fondo correspondiente al tema activo
+    document.body.classList.add(isDarkMode ? "bg-slate-900" : "bg-slate-100");
+
     document.getElementById("main-card").classList.remove("hidden");
     document.getElementById("scanner-overlay").classList.add("hidden");
   }
@@ -467,11 +479,12 @@
     const inputEl = document.getElementById('input-buscar-guia');
     const numGuia = inputEl.value.trim();
 
+    // Validar que contenga exactamente 15 dígitos numéricos
     if (!/^\d{15}$/.test(numGuia)) {
       return alert("El número de guía debe contener exactamente 15 dígitos.");
     }
 
-    inputEl.value = '';
+    // Se mantiene el número en pantalla durante la consulta
     consultarAPI(numGuia);
   }
 
