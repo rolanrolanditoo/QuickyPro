@@ -26,7 +26,7 @@ jobs:
       - name: Instalar Dependencias Web
         run: npm install
 
-      - name: Generar Entorno Android NATIVO y Recursos
+      - name: Generar Entorno Android NATIVO
         run: |
           npx cap add android
           npx capacitor-assets generate --android
@@ -38,7 +38,7 @@ jobs:
           path = 'android/app/src/main/AndroidManifest.xml'
           with open(path, 'r') as f:
               content = f.read()
-          permissions = '<uses-permission android:name=\"android.permission.CAMERA\" />\n<uses-permission android:name=\"android.permission.INTERNET\" />\n<uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\" />\n<uses-feature android:name=\"android.hardware.camera\" android:required=\"false\" />'
+          permissions = '<uses-permission android:name=\"android.permission.CAMERA\" />\n<uses-permission android:name=\"android.permission.INTERNET\" />\n<uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\" />\n<uses-feature android:name=\"android.hardware.camera\" android:required=\"true\" />'
           content = content.replace('<application', permissions + '\n<application')
           with open(path, 'w') as f:
               f.write(content)
@@ -53,5 +53,5 @@ jobs:
       - name: Subir APK Generada
         uses: actions/upload-artifact@v4
         with:
-          name: Quicky-03020-APK
+          name: Quicky-Pro-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk

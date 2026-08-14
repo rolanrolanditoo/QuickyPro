@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quicky | MRW Venezuela</title>
+  <title>Quicky | MRW</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Librería para lectura QR en navegador Web/Local -->
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
@@ -21,7 +21,7 @@
             <h1 id="app-title" class="text-xl font-extrabold tracking-wide text-white">Quicky Pro</h1>
             <!-- <span id="entorno-tag" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">MODO WEB</span> -->
           </div>
-          <p id="app-subtitle" class="text-[10px] text-slate-400 font-medium">MRW El Tigre Centro (03130)</p>
+          <p id="app-subtitle" class="text-[10px] text-slate-400 font-medium">MRW</p>
         </div>
       </div>
       <!-- Botón Modo Día / Nocturno -->
@@ -42,6 +42,7 @@
 
     <!-- MÓDULO 1: NOTIFICAR A CLIENTES -->
     <div id="modulo-notificar" class="space-y-4">
+          <!-- 1. Contenedor para abrir cámara / lector QR web -->
       <div id="scan-trigger-container" class="p-5 text-center border-2 border-dashed border-blue-500/30 bg-blue-950/30 rounded-2xl space-y-3">
         <p id="scan-subtitle" class="text-xs text-slate-300 font-medium">Escaneo instantáneo de etiqueta QR</p>
         <button onclick="escanearSegunEntorno('notificar')" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2 text-sm">
@@ -50,6 +51,15 @@
         <div id="web-reader-notificar" class="hidden overflow-hidden rounded-xl border border-slate-600 mt-2"></div>
       </div>
 
+      <!-- 2. Contenedor de ERROR cuando el QR no es válido o es una URL -->
+      <div id="qr-error-container" class="hidden p-5 text-center bg-red-950/30 border-2 border-dashed border-red-500/40 rounded-2xl space-y-3">
+        <p id="qr-error-msg" class="text-xs text-red-300 font-bold leading-relaxed"></p>
+        <button onclick="reiniciarNotificador()" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition shadow-lg flex items-center justify-center gap-2">
+          🔄 Reintentar escaneo
+        </button>
+      </div>
+
+      <!-- 3. Botón para escanear otro código cuando la lectura fue exitosa -->
       <button id="reset-btn-notificar" onclick="reiniciarNotificador()" class="hidden w-full bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2 text-sm">
         🔄 Escanear otro código
       </button>
@@ -136,7 +146,7 @@
           Consulta de Guía en Sistema API
         </label>
         <div class="flex gap-2">
-          <input type="text" id="input-buscar-guia" placeholder="Ej: 03130123456" class="w-full bg-slate-950/80 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500">
+          <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="15" id="input-buscar-guia" placeholder="" class="w-full bg-slate-950/80 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500" autocomplete="off">
           <button onclick="buscarGuiaPorNumero()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition">
             Buscar
           </button>
@@ -169,6 +179,18 @@
 
   <script>
   const MODO_ENV = 'APK'; // 'WEB' | 'APK'
+  const CODE_AGENCIA = '03130';
+  const NAME_AGENCIA = 'El Tigre Centro';
+  const ADDRESS_AGENCIA = '2da Carrera Sur, Edificio Hana detrás del SENIAT';
+  const PLAZO_AGENCIA = '7 días';
+
+  document.title = `Quicky | MRW ${CODE_AGENCIA} ${NAME_AGENCIA}`;
+  const titulo_app = document.getElementById('app-subtitle');
+  titulo_app.textContent = `MRW ${CODE_AGENCIA} ${NAME_AGENCIA}`;
+
+  let input_guia = document.getElementById('input-buscar-guia');
+  input_guia.placeholder = `00000${CODE_AGENCIA}00000`;
+  
 
   let html5QrcodeScanner = null;
   let currentData = null;
@@ -177,15 +199,6 @@
   let adicionalSeleccionado = null;
   let isDarkMode = true;
 
-  /*document.addEventListener("DOMContentLoaded", () => {
-    const tag = document.getElementById('entorno-tag');
-    if (tag) {
-      if (MODO_ENV === 'APK') {
-        tag.innerText = "MODO APK (NATIVO)";
-        tag.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
-      }
-    }
-  });*/
 
   function toggleTheme() {
   isDarkMode = !isDarkMode;
@@ -272,15 +285,16 @@
   }
 
   function obtenerTextoAdicional(opcion) {
-    if (opcion === 'DEVOLUCION') return "Su paquete está pronto a ser devuelto a su origen.";
+    const text_fijo = `Es importante que tome en cuenta que tiene un plazo de ${PLAZO_AGENCIA} hábiles para retirar su encomieda, de lo contrario será devuelta a la agencia de orígen.`;
+    if (opcion === 'DEVOLUCION') return "Su encomieda está pronta a ser devuelta a la agencia de orígen.";
     if (opcion === 'FERIADO') {
       const hoy = new Date();
       const opcionesFecha = { weekday: 'long', day: '2-digit', month: 'long' };
       let fechaFormateada = hoy.toLocaleDateString('es-ES', opcionesFecha);
       fechaFormateada = fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
-      return `Hoy ${fechaFormateada} laboraremos hasta las 12:00 PM (medio día).`;
+      return `${text_fijo}\n\nHoy ${fechaFormateada} laboraremos hasta las 12:00 PM (medio día).`;
     }
-    return "";
+    return `${text_fijo}`;
   }
 
   async function cambiarModulo(modulo) {
@@ -329,15 +343,46 @@
   async function iniciarEscanerNativo(objetivo) {
     try {
       const { BarcodeScanner } = window.Capacitor.Plugins;
-      const isAvailable = await BarcodeScanner.isGoogleBarcodeScannerModuleAvailable();
-      if (!isAvailable.available) await BarcodeScanner.installGoogleBarcodeScannerModule();
 
-      const result = await BarcodeScanner.scan();
-      if (result && result.barcodes && result.barcodes.length > 0) {
-        manejadorQRLeido(result.barcodes[0].rawValue, objetivo);
+      // Solicitar permiso de cámara al SO
+      const status = await BarcodeScanner.checkPermission({ force: true });
+      if (!status.granted) {
+        alert("Se requieren permisos de cámara para escanear.");
+        return;
+      }
+
+      // Ocultar la interfaz Web para mostrar el visor nativo de la cámara
+      BarcodeScanner.hideBackground();
+      document.body.classList.add("bg-transparent");
+      document.getElementById("main-card").classList.add("hidden");
+
+      // Iniciar el escáner del sistema
+      const result = await BarcodeScanner.startScan();
+
+      // Restablecer interfaz tras capturar
+      BarcodeScanner.showBackground();
+      document.body.classList.remove("bg-transparent");
+      document.getElementById("main-card").classList.remove("hidden");
+
+      if (result && result.hasContent) {
+        manejadorQRLeido(result.content, objetivo);
       }
     } catch (err) {
-      alert("Error en cámara nativa: " + JSON.stringify(err));
+      // Restablecer la interfaz siempre
+      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.BarcodeScanner) {
+        window.Capacitor.Plugins.BarcodeScanner.showBackground();
+      }
+      document.body.classList.remove("bg-transparent");
+      document.getElementById("main-card").classList.remove("hidden");
+
+      // Detectar si fue una cancelación del usuario para cerrar silenciosamente
+      const errorMsg = (err.message || JSON.stringify(err) || '').toLowerCase();
+      if (errorMsg.includes('canceled') || errorMsg.includes('cancelled') || errorMsg.includes('user canceled')) {
+        return; // Cierra la cámara sin mostrar ningún alert
+      }
+
+      // Si es un error real diferente a cancelar, mostrar la alerta
+      alert("Error en cámara nativa: " + (err.message || JSON.stringify(err)));
     }
   }
 
@@ -372,8 +417,18 @@
   }
 
   function buscarGuiaPorNumero() {
-    const numGuia = document.getElementById('input-buscar-guia').value.trim();
-    if (!numGuia) return alert("Ingrese un número de guía válido");
+    const inputEl = document.getElementById('input-buscar-guia');
+    const numGuia = inputEl.value.trim();
+
+    // Validar que contenga exactamente 15 dígitos numéricos
+    if (!/^\d{15}$/.test(numGuia)) {
+      return alert("El número de guía debe contener exactamente 15 dígitos.");
+    }
+
+    // Limpiar el campo de entrada inmediatamente
+    inputEl.value = '';
+
+    // Ejecutar la consulta con el número capturado
     consultarAPI(numGuia);
   }
 
@@ -465,7 +520,10 @@
     const desc = (data.descripcion || '').toUpperCase();
     const tipo = (data.tipo_envio || '').toLowerCase();
 
-    if (desc === "CD" || tipo.includes("cobro") || tipo.includes("cod")) {
+    // Evaluar estrictamente si es Cobro a Destino
+    const esCOD = desc === "CD" || tipo.includes("cobro") || tipo.includes("cod");
+
+    if (esCOD) {
       modalidadTexto = "Cobro a Destino (COD)";
     } else if (tipo.includes("pago en or")) {
       modalidadTexto = "Pago en Origen (Pagado)";
@@ -473,9 +531,9 @@
       modalidadTexto = data.tipo_envio;
     }
 
-    // Verificar si aplica Cashea / Corporativo mediante el número alterno
+    // Se muestra la etiqueta CASHEA / CORP solo si existe num_alterno Y NO es una guía de Cobro a Destino
     const tieneNumAlterno = data.num_alterno && data.num_alterno.trim() !== '' && data.num_alterno.trim().toUpperCase() !== 'N/A';
-    const badgeCasheaCorp = tieneNumAlterno 
+    const badgeCasheaCorp = (tieneNumAlterno && !esCOD)
       ? `<span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-purple-500/20 text-purple-300 border border-purple-500/40 ml-1">CASHEA / CORP</span>` 
       : '';
 
@@ -689,9 +747,9 @@
     if (data.destinatario_telefono) {
       const phoneDest = formatearTelefonoVZLA(data.destinatario_telefono);
 
-      const plantillaWA_Dest = `¡Hola ${nombreDestinatario}! 👋\n\nLe escribimos de *MRW El Tigre Centro* (2da Carrera Sur, Edificio Hana).\n\nLe notificamos que su *${tipoYClase}* con guía 🏷️ *${guiaCorta}* se encuentra listo para ser retirado en oficina.\n\n📋 *Detalles del envío:*\n${detallesPaquete}\n\n`;
+      const plantillaWA_Dest = `¡Feliz y bendecido día ☀! \n\nEstimad@ *${nombreDestinatario}*, le escribimos de *MRW ${NAME_AGENCIA}*\nEstamos ubicados 📌 en la ${ADDRESS_AGENCIA} y laboramos 🕕 horario corrido desde 08:00 AM hasta las 04:50 PM.\n\nNos complace informarle que su encomieda de tipo *${tipoYClase}* con guía 🏷️ *${guiaCorta}* se encuentra lista para ser retirada en oficina.\n\n📋 *Detalles del envío:*\n${detallesPaquete}\n\n`;
 
-      const plantillaSMS_Dest = `Hola ${nombreDestinatario}! Le escribimos de la Agencia MRW El Tigre Centro (2da Carrera Sur, Edificio Hana): Su ${tipoYClase} guia ${guiaCorta} se encuentra listo para ser retirado en oficina.\n\nDetalles:\n${detallesPaquete}`;
+      const plantillaSMS_Dest = `¡Feliz y bendecido día! \n\nEstimad@ ${nombreDestinatario}, le escribimos de *MRW ${NAME_AGENCIA}*\nEstamos ubicados en la ${ADDRESS_AGENCIA} y laboramos horario corrido desde 08:00 AM hasta las 04:50 PM.\n\nNos complace informarle que su encomieda de tipo *${tipoYClase}* con guía *${guiaCorta}* se encuentra lista para ser retirada en oficina.\n\n*Detalles del envío:*\n${detallesPaquete}\n\n`;
 
       actions.appendChild(crearBotonApp(`💬 WhatsApp Destinatario`, `https://wa.me/${phoneDest}?text=${encodeURIComponent(plantillaWA_Dest)}`, 'bg-emerald-600 hover:bg-emerald-500 text-white'));
       actions.appendChild(crearBotonApp(`📱 SMS Destinatario`, `sms:${phoneDest}?body=${encodeURIComponent(plantillaSMS_Dest)}`, 'bg-blue-600 hover:bg-blue-500 text-white'));
