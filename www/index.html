@@ -4,282 +4,497 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Quicky | MRW</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Librería para lectura QR en navegador Web/Local -->
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-</head>
-<body id="app-body" class="bg-slate-900 min-h-screen p-4 text-slate-100 font-sans transition-colors duration-300">
+  
+  <!-- Librería local para escaneo web/local (sin internet) -->
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <script src="../assets/js/html5-qrcode.min.js" type="text/javascript"></script>
 
-  <div id="main-card" class="max-w-md mx-auto bg-slate-800 rounded-3xl shadow-2xl border border-slate-700/80 p-5 space-y-4 transition-colors duration-300">
+</head>
+<body id="app-body" data-theme="light">
+
+  <div id="main-card" class="card">
     
-    <!-- Header principal con Modo Nocturno / Día -->
-    <div class="flex items-center justify-between border-b border-slate-700/60 pb-3">
-      <div class="flex items-center gap-2">
-        <span class="text-2xl">🤌⚡</span>
+    <!-- Header -->
+    <div class="header">
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <span style="font-size: 1.5rem;" >🤌🏽⚡</span>
         <div>
-          <div class="flex items-center gap-2">
-            <h1 id="app-title" class="text-xl font-extrabold tracking-wide text-white">Quicky Pro</h1>
-          </div>
-          <p id="app-subtitle" class="text-[10px] text-slate-400 font-medium">MRW</p>
+          <h1 style="font-size: 1.15rem; font-weight: 800; letter-spacing: 0.02em;">Quicky Pro</h1>
+          <p id="app-subtitle" style="font-size: 0.65rem; color: var(--text-muted); font-weight: 600;">MRW</p>
         </div>
       </div>
-      <!-- Botón Modo Día / Nocturno -->
-      <button id="theme-toggle-btn" onclick="toggleTheme()" class="p-2 rounded-xl bg-slate-700/80 hover:bg-slate-600 border border-slate-600 text-amber-400 transition flex items-center justify-center text-sm shadow">
+      <button id="theme-toggle-btn" 
+        onmousedown="iniciarPresionLuna()" 
+        onmouseup="cancelarPresionLuna()" 
+        onmouseleave="cancelarPresionLuna()" 
+        ontouchstart="iniciarPresionLuna(event)" 
+        ontouchend="cancelarPresionLuna(event)" 
+        ontouchcancel="cancelarPresionLuna(event)" 
+        onclick="manejarClickLuna()" 
+        class="btn-action-select" 
+        style="padding: 0.5rem 0.75rem; user-select: none; -webkit-user-select: none;">
         🌙
       </button>
     </div>
 
-    <!-- Menú Principal: Navegación de 2 Botones -->
-    <div id="nav-container" class="grid grid-cols-2 gap-2 p-1 bg-slate-900/60 rounded-2xl border border-slate-700/60">
-      <button id="nav-btn-notificar" onclick="cambiarModulo('notificar')" class="py-2.5 px-3 text-xs font-bold rounded-xl bg-blue-600 text-white shadow-md transition flex items-center justify-center gap-1.5">
+    <!-- Menú Principal -->
+    <div class="nav-grid">
+      <button id="nav-btn-notificar" onclick="cambiarModulo('notificar')" class="nav-btn active">
         <span>💬</span> Notificar
       </button>
-      <button id="nav-btn-buscar" onclick="cambiarModulo('buscar')" class="py-2.5 px-3 text-xs font-semibold rounded-xl text-slate-400 hover:text-white transition flex items-center justify-center gap-1.5">
+      <button id="nav-btn-buscar" onclick="cambiarModulo('buscar')" class="nav-btn inactive">
         <span>🔍</span> Buscar Guía
       </button>
     </div>
 
-    <!-- MÓDULO 1: NOTIFICAR A CLIENTES -->
-    <div id="modulo-notificar" class="space-y-4">
-      <!-- 1. Contenedor para abrir cámara / lector QR web -->
-      <div id="scan-trigger-container" class="p-5 text-center border-2 border-dashed border-blue-500/30 bg-blue-950/30 rounded-2xl space-y-3">
-        <p id="scan-subtitle" class="text-xs text-slate-300 font-medium">Escaneo de QR</p>
-        <button onclick="escanearSegunEntorno('notificar')" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2 text-sm">
+    <!-- MÓDULO 1: NOTIFICAR -->
+    <div id="modulo-notificar" style="display: flex; flex-direction: column; gap: 1rem;">
+      
+      <!-- Contenedor Escáner + Formulario Manual -->
+      <div id="scan-trigger-container" class="scan-container">
+        <p style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Escaneo de QR</p>
+        <button onclick="escanearSegunEntorno('notificar')" class="btn-camera">
           📷 ABRIR CÁMARA
         </button>
-        <div id="web-reader-notificar" class="hidden overflow-hidden rounded-xl border border-slate-600 mt-2"></div>
-      </div>
+        <div id="web-reader-notificar" class="hidden" style="border-radius: 0.75rem; overflow: hidden; border: 1px solid var(--card-border);"></div>
 
-      <!-- 2. Contenedor de ERROR cuando el QR no es válido o es una URL -->
-      <div id="qr-error-container" class="hidden p-5 text-center bg-red-950/30 border-2 border-dashed border-red-500/40 rounded-2xl space-y-3">
-        <p id="qr-error-msg" class="text-xs text-red-300 font-bold leading-relaxed"></p>
-        <button onclick="reiniciarNotificador()" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition shadow-lg flex items-center justify-center gap-2">
-          🔄 Reintentar escaneo
+        <button type="button" onclick="toggleFormManualNotificar()" class="btn-toggle-manual">
+          ✍🏽 Ingresar Guía Manualmente
         </button>
+
+        <!-- Formulario Manual Desplegable -->
+        <div id="manual-notificar-form" class="manual-box hidden">
+          <p style="font-size: 0.7rem; font-weight: 800; color: #2563eb; text-align: center; text-transform: uppercase;">Carga Manual por Guía</p>
+          
+          <div>
+            <label class="field-label">N° de Guía:</label>
+            <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="15" id="manual-input-guia" placeholder="000000000000000" autocomplete="off" class="input-control">
+          </div>
+
+          <div>
+            <label class="field-label">Teléfono Destinatario:</label>
+            <input type="tel" inputmode="numeric" id="manual-input-telefono" placeholder="Ej: 04141234567" autocomplete="off" class="input-control">
+          </div>
+
+          <div>
+            <label class="field-label">Clase de Envío:</label>
+            <select id="manual-select-clase" onchange="onManualClaseChange()" class="input-control">
+              <option value="COD">COD</option>
+              <option value="PAGADO">PAGADO</option>
+              <option value="CASHEA">CASHEA</option>
+              <option value="CORPORATIVO">CORPORATIVO</option>
+            </select>
+          </div>
+
+          <div id="manual-monto-container">
+            <label class="field-label">Monto a Pagar (Bs.):</label>
+            <input type="text" inputmode="numeric" id="manual-input-monto" oninput="formatearMontoEnTiempoReal(this)" placeholder="0,00" autocomplete="off" class="input-control">
+          </div>
+
+          <div>
+            <label class="field-label">N° de Cupones:</label>
+            <input type="number" min="1" id="manual-input-cupones" placeholder="1" autocomplete="off" value="1" class="input-control">
+          </div>
+
+          <button type="button" id="btn-manual-procesar" onclick="procesarNotificacionManual()" class="btn-camera" style="padding: 0.65rem; font-size: 0.75rem;">
+            🔍 Consultar API y Notificar
+          </button>
+        </div>
       </div>
 
-      <!-- 3. Botón para escanear otro código cuando la lectura fue exitosa -->
-      <button id="reset-btn-notificar" onclick="reiniciarNotificador()" class="hidden w-full bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2 text-sm">
+      <!-- Errores -->
+      <div id="qr-error-container" class="hidden alert-box" style="border-color: #ef4444; color: #dc2626; background-color: rgba(239, 68, 68, 0.1);">
+        <p id="qr-error-msg" style="font-size: 0.75rem; margin-bottom: 0.5rem;"></p>
+        <button onclick="reiniciarNotificador()" class="btn-camera" style="background: #dc2626; padding: 0.5rem;">🔄 Reintentar escaneo</button>
+      </div>
+
+      <button id="reset-btn-notificar" onclick="reiniciarNotificador()" class="btn-toggle-manual hidden">
         🔄 Escanear otro código
       </button>
 
-      <!-- Panel de Opciones y Resultados de Notificación -->
-      <div id="result-container-notificar" class="hidden space-y-4">
+      <!-- Panel de Opciones y Resultados -->
+      <div id="result-container-notificar" class="hidden" style="display: flex; flex-direction: column; gap: 1rem;">
         
-        <div id="data-card-notificar" class="bg-slate-900/80 p-4 rounded-2xl space-y-2 border border-slate-700/60 text-sm">
-          <div class="flex justify-between border-b border-slate-800 pb-2">
-            <span class="text-slate-400 font-medium text-xs">Guía / Tracking:</span>
-            <span id="res-guia" class="font-black text-blue-400 tracking-wider">-</span>
+        <div class="data-card">
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--divider); padding-bottom: 0.5rem;">
+            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Guía / Tracking:</span>
+            <span id="res-guia" style="font-weight: 900; color: #2563eb;">-</span>
           </div>
-          <div class="grid grid-cols-2 gap-2 pt-1">
+          <div class="grid-2" style="padding-top: 0.25rem;">
             <div>
-              <p class="text-[10px] text-slate-400 uppercase font-bold">Remitente</p>
-              <p id="res-remitente" class="font-semibold text-slate-200 truncate">-</p>
-              <p id="res-tel-remitente" class="text-xs text-blue-400 font-mono">-</p>
+              <p class="field-label">Remitente</p>
+              <p id="res-remitente" style="font-weight: 600;">-</p>
+              <p id="res-tel-remitente" style="font-size: 0.75rem; color: #2563eb;">-</p>
             </div>
             <div>
-              <p class="text-[10px] text-slate-400 uppercase font-bold">Destinatario</p>
-              <p id="res-destinatario" class="font-semibold text-slate-200 truncate">-</p>
-              <p id="res-tel-destinatario" class="text-xs text-blue-400 font-mono">-</p>
+              <p class="field-label">Destinatario</p>
+              <p id="res-destinatario" style="font-weight: 600;">-</p>
+              <p id="res-tel-destinatario" style="font-size: 0.75rem; color: #2563eb;">-</p>
             </div>
           </div>
-          <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-800 text-xs text-center">
-            <div class="bg-slate-800/50 p-1.5 rounded-lg">
-              <p class="text-[10px] text-slate-400 font-semibold">Peso</p>
-              <p id="res-peso" class="font-bold text-slate-200">- Kg</p>
+          <div class="grid-3" style="border-top: 1px solid var(--divider); padding-top: 0.5rem;">
+            <div class="stat-pill">
+              <p class="field-label">Peso</p>
+              <p id="res-peso" style="font-weight: 700;">- Kg</p>
             </div>
-            <div class="bg-slate-800/50 p-1.5 rounded-lg">
-              <p class="text-[10px] text-slate-400 font-semibold">Monto</p>
-              <p id="res-precio" class="font-bold text-emerald-400">Bs. -</p>
+            <div class="stat-pill">
+              <p class="field-label">Monto</p>
+              <p id="res-precio" style="font-weight: 700; color: #059669;">Bs. -</p>
             </div>
-            <div class="bg-slate-800/50 p-1.5 rounded-lg">
-              <p class="text-[10px] text-slate-400 font-semibold">Cupones</p>
-              <p id="res-cupones" class="font-bold text-purple-400">-</p>
+            <div class="stat-pill">
+              <p class="field-label">Cupones</p>
+              <p id="res-cupones" style="font-weight: 700; color: #9333ea;">-</p>
             </div>
           </div>
         </div>
 
-        <div id="config-card-notificar" class="bg-slate-900/40 border border-slate-700/80 p-4 rounded-2xl space-y-3">
-          <h3 class="text-[11px] font-bold text-blue-400 uppercase tracking-wider">Configuración del Envío</h3>
+        <div class="manual-box">
+          <h3 style="font-size: 0.7rem; font-weight: 800; color: #2563eb; text-transform: uppercase;">Configuración del Envío</h3>
           
-          <div class="space-y-1">
-            <label id="lbl-clase" class="block text-xs font-semibold text-slate-300">1. Clase:</label>
-            <div class="grid grid-cols-2 gap-2" id="group-clase">
-              <button type="button" onclick="seleccionarClase('COD')" class="btn-clase py-2 px-3 text-xs font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200">COD</button>
-              <button type="button" onclick="seleccionarClase('PAGADO')" class="btn-clase py-2 px-3 text-xs font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200">PAGADO</button>
-              <button type="button" onclick="seleccionarClase('CASHEA')" class="btn-clase py-2 px-3 text-xs font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200">CASHEA</button>
-              <button type="button" onclick="seleccionarClase('CORPORATIVO')" class="btn-clase py-2 px-3 text-xs font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200">CORPORATIVO</button>
+          <div>
+            <label class="field-label">1. Clase:</label>
+            <div class="grid-2" id="group-clase">
+              <button type="button" onclick="seleccionarClase('COD')" class="btn-action-select btn-clase">COD</button>
+              <button type="button" onclick="seleccionarClase('PAGADO')" class="btn-action-select btn-clase">PAGADO</button>
+              <button type="button" onclick="seleccionarClase('CASHEA')" class="btn-action-select btn-clase">CASHEA</button>
+              <button type="button" onclick="seleccionarClase('CORPORATIVO')" class="btn-action-select btn-clase">CORPORATIVO</button>
             </div>
           </div>
 
-          <div class="space-y-1">
-            <label id="lbl-tipo" class="block text-xs font-semibold text-slate-300">2. Tipo:</label>
-            <div class="grid grid-cols-2 gap-2" id="group-tipo">
-              <button type="button" onclick="seleccionarTipo('Sobre')" class="btn-tipo py-2 px-3 text-xs font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200">📨 Sobre</button>
-              <button type="button" onclick="seleccionarTipo('Paquete')" class="btn-tipo py-2 px-3 text-xs font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200">📦 Paquete</button>
+          <div>
+            <label class="field-label">2. Tipo:</label>
+            <div class="grid-2" id="group-tipo">
+              <button type="button" onclick="seleccionarTipo('Sobre')" class="btn-action-select btn-tipo">📨 Sobre</button>
+              <button type="button" onclick="seleccionarTipo('Paquete')" class="btn-action-select btn-tipo">📦 Paquete</button>
             </div>
           </div>
 
-          <div class="space-y-1">
-            <label id="lbl-adicional" class="block text-xs font-semibold text-slate-300">3. Adicional:</label>
-            <div class="grid grid-cols-3 gap-1.5" id="group-adicional">
-              <button type="button" onclick="seleccionarAdicional('NINGUNO')" class="btn-adicional py-2 px-1.5 text-[11px] font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200">Ninguno</button>
-              <button type="button" onclick="seleccionarAdicional('DEVOLUCION')" class="btn-adicional py-2 px-1.5 text-[11px] font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200">Devolución</button>
-              <button type="button" onclick="seleccionarAdicional('FERIADO')" class="btn-adicional py-2 px-1.5 text-[11px] font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200">Feriado</button>
+          <div>
+            <label class="field-label">3. Adicional:</label>
+            <div class="grid-3" id="group-adicional">
+              <button type="button" onclick="seleccionarAdicional('NINGUNO')" class="btn-action-select btn-adicional">Ninguno</button>
+              <button type="button" onclick="seleccionarAdicional('DEVOLUCION')" class="btn-action-select btn-adicional">Devolución</button>
+              <button type="button" onclick="seleccionarAdicional('FERIADO')" class="btn-action-select btn-adicional">Feriado</button>
             </div>
           </div>
         </div>
 
-        <div id="alerta-seleccion" class="p-3 bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs rounded-xl text-center font-medium">
+        <div id="alerta-seleccion" class="alert-box">
           ⚠️ Complete la configuración para activar la mensajería.
         </div>
 
-        <div id="actions-container" class="flex flex-col gap-2.5 transition-all"></div>
+        <div id="actions-container" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
       </div>
     </div>
 
-    <!-- MÓDULO 2: BÚSQUEDA Y CONSULTA EN API -->
-    <div id="modulo-buscar" class="hidden space-y-4">
-      <div id="search-card" class="bg-slate-900/60 border border-slate-700/60 p-4 rounded-2xl space-y-3">
-        <label id="lbl-buscar" class="block text-xs font-bold text-slate-300 uppercase tracking-wider">
-          Consulta Guía en Rastreo online MRW
-        </label>
-        <div class="flex gap-2">
-          <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="15" id="input-buscar-guia" placeholder="" class="w-full bg-slate-950/80 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500" autocomplete="off">
-          <button onclick="buscarGuiaPorNumero()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition">
-            Buscar
-          </button>
+    <!-- MÓDULO 2: BÚSQUEDA -->
+    <div id="modulo-buscar" class="hidden" style="display: flex; flex-direction: column; gap: 1rem;">
+      <div class="manual-box">
+        <label class="field-label">Consulta Guía en Rastreo online MRW</label>
+        <div style="display: flex; gap: 0.5rem;">
+          <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="15" id="input-buscar-guia" onkeydown="if(event.key === 'Enter') buscarGuiaPorNumero()" class="input-control" autocomplete="off" placeholder="">
+          <button onclick="buscarGuiaPorNumero()" class="btn-camera" style="width: auto; padding: 0 1rem; font-size: 0.75rem;">Buscar</button>
         </div>
-        <div class="relative flex py-1 items-center">
-          <div class="flex-grow border-t border-slate-800"></div>
-          <span class="flex-shrink mx-2 text-[10px] text-slate-500 font-bold uppercase">o escanear</span>
-          <div class="flex-grow border-t border-slate-800"></div>
+        <div class="divider-box">
+          <div class="divider-line"></div>
+          <span class="divider-text">o escanear</span>
+          <div class="divider-line"></div>
         </div>
-        <button onclick="escanearSegunEntorno('buscar')" class="w-full border border-blue-500/40 bg-blue-950/20 hover:bg-blue-900/40 text-blue-300 font-semibold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2">
+        <button onclick="escanearSegunEntorno('buscar')" class="btn-toggle-manual" style="border-color: #93c5fd; color: #2563eb;">
           📷 Escanear QR para consultar en Rastreo
         </button>
-        <div id="web-reader-buscar" class="hidden overflow-hidden rounded-xl border border-slate-600 mt-2"></div>
+        <div id="web-reader-buscar" class="hidden" style="border-radius: 0.75rem; overflow: hidden; border: 1px solid var(--card-border); margin-top: 0.5rem;"></div>
       </div>
 
-      <div id="search-loading" class="hidden text-center py-6 space-y-2">
-        <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent"></div>
-        <p class="text-xs text-slate-400 font-medium">Consultando Rastreo de MRW...</p>
+      <div id="search-loading" class="hidden" style="text-align: center; padding: 1.5rem 0;">
+        <p style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Consultando Rastreo de MRW...</p>
       </div>
 
-      <div id="search-result-card" class="hidden bg-slate-900/80 p-4 rounded-2xl border border-slate-700/60 space-y-3 text-sm"></div>
+      <div id="search-result-card" class="data-card hidden"></div>
     </div>
 
     <!-- Footer -->
-    <p id="app-footer" class="text-center text-xs text-slate-300 font-medium pt-3 border-t border-slate-700/60 transition-colors duration-300">
-      Desarrollado por: <span id="app-author" class="text-white font-extrabold text-sm tracking-wide">Rolando Palma (RolanditoDev)</span>
+    <p style="text-align: center; font-size: 0.75rem; color: var(--text-muted); border-top: 1px solid var(--divider); padding-top: 0.75rem;">
+      Desarrollado por: <span style="font-weight: 800; color: var(--text-main);">Rolando Palma (RolanditoDev)</span>
     </p>
 
   </div>
 
-  <!-- UI Flotante sobre la cámara para cancelar -->
-  <div id="scanner-overlay" class="hidden fixed inset-0 z-50 flex flex-col justify-between p-6 pointer-events-none">
-    <div class="flex justify-between items-center pointer-events-auto">
-      <span class="bg-slate-900/80 text-slate-200 text-xs px-3 py-1.5 rounded-full border border-slate-700/80 font-medium">
+  <!-- UI Flotante para escáner nativo -->
+  <div id="scanner-overlay" class="hidden">
+    <div style="display: flex; justify-content: space-between; align-items: center; pointer-events: auto;">
+      <span style="background: rgba(15, 23, 42, 0.85); color: #f8fafc; font-size: 0.75rem; padding: 0.4rem 0.85rem; border-radius: 9999px;">
         📷 Escaneando QR...
       </span>
-      <button onclick="detenerEscanerNativo()" class="bg-red-600 hover:bg-red-500 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-2xl flex items-center gap-1 active:scale-95 transition">
+      <button onclick="detenerEscanerNativo()" style="background: #dc2626; color: #fff; font-weight: 700; padding: 0.5rem 1rem; border-radius: 0.75rem; border: none; font-size: 0.75rem;">
         ✖ Cancelar
       </button>
     </div>
-
-    <div class="self-center w-64 h-64 border-2 border-dashed border-blue-400/80 rounded-3xl bg-blue-500/5"></div>
-
-    <div class="text-center pointer-events-auto">
-      <button onclick="detenerEscanerNativo()" class="bg-slate-900/90 hover:bg-slate-800 text-slate-200 font-bold py-3 px-6 rounded-2xl text-xs border border-slate-700 shadow-2xl transition">
+    <div style="align-self: center; width: 16rem; height: 16rem; border: 2px dashed #60a5fa; border-radius: 1.5rem;"></div>
+    <div style="text-align: center; pointer-events: auto;">
+      <button onclick="detenerEscanerNativo()" style="background: rgba(15, 23, 42, 0.9); color: #f8fafc; font-weight: 700; padding: 0.75rem 1.5rem; border-radius: 1rem; border: 1px solid #334155; font-size: 0.75rem;">
         🔙 Volver
       </button>
     </div>
   </div>
 
+  <!-- MODAL 1: PIN -->
+  <div id="pin-modal" class="modal-backdrop hidden" style="display: none;">
+    <div class="modal-content" style="max-width: 20rem; text-align: center;">
+      <span style="font-size: 2rem;">🔒</span>
+      <h2 style="font-size: 1rem; font-weight: 800; color: #2563eb;">Acceso Administrativo</h2>
+      <p style="font-size: 0.75rem; color: var(--text-muted);">Ingrese el PIN de 6 dígitos:</p>
+      
+      <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" id="input-admin-pin" onkeydown="if(event.key === 'Enter') verificarPinAcceso()" class="input-control" placeholder="••••••" style="letter-spacing: 0.5em; text-align: center; font-size: 1.25rem; font-weight: 800;">
+
+      <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+        <button onclick="verificarPinAcceso()" class="btn-camera" style="padding: 0.65rem;">Verificar</button>
+        <button onclick="cerrarModalPin()" class="btn-toggle-manual" style="padding: 0.65rem;">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: CONFIGURACIÓN -->
+  <div id="config-modal" class="modal-backdrop hidden" style="display: none;">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--divider); padding-bottom: 0.5rem;">
+        <h2 style="font-size: 0.95rem; font-weight: 800; color: #2563eb;">⚙️ Parámetros de la Agencia</h2>
+        <button onclick="cerrarModalConfiguracion()" style="background: transparent; border: none; font-size: 1rem; cursor: pointer; color: var(--text-muted);">✖</button>
+      </div>
+
+      <div>
+        <label class="field-label">Código Agencia:</label>
+        <input type="text" id="cfg-code" class="input-control" placeholder="03020">
+      </div>
+
+      <div>
+        <label class="field-label">Nombre Agencia:</label>
+        <input type="text" id="cfg-name" class="input-control" placeholder="El Tigre">
+      </div>
+
+      <div>
+        <label class="field-label">Dirección Agencia:</label>
+        <textarea id="cfg-address" class="input-control" rows="3" style="resize: none;" placeholder="Dirección completa"></textarea>
+      </div>
+
+      <div>
+        <label class="field-label">Plazo de Retiro:</label>
+        <input type="text" id="cfg-plazo" class="input-control" placeholder="7 días">
+      </div>
+
+      <div style="display: flex; gap: 0.5rem; margin-top: 0.25rem;">
+        <button onclick="guardarConfiguracionAgencia()" class="btn-camera" style="padding: 0.65rem;">💾 Guardar Cambios</button>
+        <button onclick="cerrarModalConfiguracion()" class="btn-toggle-manual" style="padding: 0.65rem;">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
   <script>
   const MODO_ENV = 'APK'; // 'WEB' | 'APK'
-  const CODE_AGENCIA = '03020';
-  const NAME_AGENCIA = 'El Tigre';
-  const ADDRESS_AGENCIA = 'Av. Francisco de Miranda con Calle 18 Sur, Edificio Los Geranios al lado de la Panadería Siria';
-  const PLAZO_AGENCIA = '7 días';
 
-  document.title = `Quicky | MRW ${CODE_AGENCIA} ${NAME_AGENCIA}`;
-  const titulo_app = document.getElementById('app-subtitle');
-  titulo_app.textContent = `MRW ${CODE_AGENCIA} ${NAME_AGENCIA}`;
+  // PIN de seguridad numérico de 6 dígitos
+  const ADMIN_PIN = '459130'; 
 
-  let input_guia = document.getElementById('input-buscar-guia');
-  input_guia.placeholder = `00000${CODE_AGENCIA}00000`;
+  let CODE_AGENCIA = '03130';
+  let NAME_AGENCIA = 'El Tigre Centro';
+  let ADDRESS_AGENCIA = '2da Carrera Sur, Edificio Hana detrás del SENIAT';
+  let PLAZO_AGENCIA = '7 días';
+
+  let temporizadorLuna = null;
+  let esPresionLarga = false;
+
+  function iniciarPresionLuna(e) {
+    esPresionLarga = false;
+    
+    // Iniciar conteo de 10 segundos (10000 ms)
+    temporizadorLuna = setTimeout(() => {
+      esPresionLarga = true;
+      
+      // Si el dispositivo soporta vibración, vibra para avisar que se activó
+      if (navigator.vibrate) {
+        navigator.vibrate(200);
+      }
+      
+      abrirModalPin();
+    }, 10000);
+  }
+
+  function cancelarPresionLuna(e) {
+    clearTimeout(temporizadorLuna);
+  }
+
+  function manejarClickLuna() {
+    if (esPresionLarga) {
+      esPresionLarga = false;
+      return;
+    }
+    toggleTheme();
+  }
+
+  function abrirModalPin() {
+    const modal = document.getElementById('pin-modal');
+    const pinInput = document.getElementById('input-admin-pin');
+    
+    if (!modal) {
+      alert("Error: No se encontró el elemento #pin-modal en el HTML.");
+      return;
+    }
+
+    pinInput.value = '';
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+    
+    setTimeout(() => pinInput.focus(), 150);
+  }
+
+  function cerrarModalPin() {
+    const modal = document.getElementById('pin-modal');
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+  }
+
+  function verificarPinAcceso() {
+    const pinIngresado = document.getElementById('input-admin-pin').value.trim();
+
+    if (pinIngresado === ADMIN_PIN) {
+      cerrarModalPin();
+      abrirModalConfiguracion();
+    } else {
+      alert("❌ PIN de acceso incorrecto.");
+      document.getElementById('input-admin-pin').value = '';
+      document.getElementById('input-admin-pin').focus();
+    }
+  }
+
+  function abrirModalConfiguracion() {
+    const modal = document.getElementById('config-modal');
+    document.getElementById('cfg-code').value = CODE_AGENCIA;
+    document.getElementById('cfg-name').value = NAME_AGENCIA;
+    document.getElementById('cfg-address').value = ADDRESS_AGENCIA;
+    document.getElementById('cfg-plazo').value = PLAZO_AGENCIA;
+    
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+  }
+
+  function cerrarModalConfiguracion() {
+    const modal = document.getElementById('config-modal');
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+  }
+
+  function guardarConfiguracionAgencia() {
+    const code = document.getElementById('cfg-code').value.trim();
+    const name = document.getElementById('cfg-name').value.trim();
+    const address = document.getElementById('cfg-address').value.trim();
+    const plazo = document.getElementById('cfg-plazo').value.trim();
+
+    if (!code || !name || !address || !plazo) {
+      return alert("Todos los campos son obligatorios.");
+    }
+
+    CODE_AGENCIA = code;
+    NAME_AGENCIA = name;
+    ADDRESS_AGENCIA = address;
+    PLAZO_AGENCIA = plazo;
+
+    const datosAGuardar = {
+      code_agencia: CODE_AGENCIA,
+      name_agencia: NAME_AGENCIA,
+      address_agencia: ADDRESS_AGENCIA,
+      plazo_agencia: PLAZO_AGENCIA
+    };
+
+    localStorage.setItem('quicky_mrw_config', JSON.stringify(datosAGuardar));
+    actualizarUIInformacionAgencia();
+    cerrarModalConfiguracion();
+    alert("✅ Configuración guardada correctamente.");
+  }
+
+  function actualizarUIInformacionAgencia() {
+    document.title = `Quicky | MRW ${CODE_AGENCIA} ${NAME_AGENCIA}`;
+    const titulo_app = document.getElementById('app-subtitle');
+    if (titulo_app) titulo_app.textContent = `MRW ${CODE_AGENCIA} ${NAME_AGENCIA}`;
+
+    const input_guia = document.getElementById('input-buscar-guia');
+    if (input_guia) input_guia.placeholder = `00000${CODE_AGENCIA}00000`;
+  }
+
+  async function cargarDatosAgencia() {
+    const datosLocales = localStorage.getItem('quicky_mrw_config');
+    if (datosLocales) {
+      try {
+        const parsed = JSON.parse(datosLocales);
+        CODE_AGENCIA = parsed.code_agencia || CODE_AGENCIA;
+        NAME_AGENCIA = parsed.name_agencia || NAME_AGENCIA;
+        ADDRESS_AGENCIA = parsed.address_agencia || ADDRESS_AGENCIA;
+        PLAZO_AGENCIA = parsed.plazo_agencia || PLAZO_AGENCIA;
+        actualizarUIInformacionAgencia();
+        return;
+      } catch (e) {
+        console.warn("Error leyendo localStorage:", e);
+      }
+    }
+
+    try {
+      const response = await fetch('./data.json');
+      if (response.ok) {
+        const data = await response.json();
+        CODE_AGENCIA = data.code_agencia || CODE_AGENCIA;
+        NAME_AGENCIA = data.name_agencia || NAME_AGENCIA;
+        ADDRESS_AGENCIA = data.address_agencia || ADDRESS_AGENCIA;
+        PLAZO_AGENCIA = data.plazo_agencia || PLAZO_AGENCIA;
+      }
+    } catch (err) {
+      console.warn("data.json no disponible.");
+    } finally {
+      actualizarUIInformacionAgencia();
+    }
+  }
+
+  cargarDatosAgencia();
 
   let html5QrcodeScanner = null;
   let currentData = null;
   let claseSeleccionada = null;
   let tipoSeleccionado = null;
   let adicionalSeleccionado = null;
-  let isDarkMode = true;
+  let isDarkMode = false;
 
   function toggleTheme() {
     isDarkMode = !isDarkMode;
-    const body = document.getElementById('app-body');
-    const card = document.getElementById('main-card');
-    const toggleBtn = document.getElementById('theme-toggle-btn');
-    const title = document.getElementById('app-title');
-    const subtitle = document.getElementById('app-subtitle');
-    const dataCard = document.getElementById('data-card-notificar');
-    const configCard = document.getElementById('config-card-notificar');
-    const searchCard = document.getElementById('search-card');
+    document.body.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+    document.getElementById('theme-toggle-btn').innerText = isDarkMode ? '🌙' : '☀️';
+  }
 
-    const footer = document.getElementById('app-footer');
-    const author = document.getElementById('app-author');
-
-    const textDarkTarget = document.querySelectorAll('#res-remitente, #res-destinatario, #res-peso, #lbl-clase, #lbl-tipo, #lbl-adicional, #lbl-buscar, #scan-subtitle');
-
-    if (!isDarkMode) {
-      body.className = "bg-slate-100 min-h-screen p-4 text-slate-900 font-sans transition-colors duration-300";
-      card.className = "max-w-md mx-auto bg-white rounded-3xl shadow-xl border border-slate-200 p-5 space-y-4 transition-colors duration-300";
-      toggleBtn.innerText = "☀️";
-      toggleBtn.className = "p-2 rounded-xl bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-600 transition flex items-center justify-center text-sm shadow";
-      
-      title.className = "text-xl font-extrabold tracking-wide text-slate-900";
-      subtitle.className = "text-[10px] text-slate-600 font-medium";
-
-      dataCard.className = "bg-slate-50 p-4 rounded-2xl space-y-2 border border-slate-200 text-sm text-slate-800";
-      configCard.className = "bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-3";
-      searchCard.className = "bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-3";
-
-      footer.className = "text-center text-xs text-slate-700 font-semibold pt-3 border-t border-slate-200 transition-colors duration-300";
-      author.className = "text-slate-950 font-black text-sm tracking-wide";
-
-      textDarkTarget.forEach(el => {
-        el.classList.remove('text-slate-200', 'text-slate-300');
-        el.classList.add('text-slate-900', 'font-semibold');
-      });
-
-    } else {
-      body.className = "bg-slate-900 min-h-screen p-4 text-slate-100 font-sans transition-colors duration-300";
-      card.className = "max-w-md mx-auto bg-slate-800 rounded-3xl shadow-2xl border border-slate-700/80 p-5 space-y-4 transition-colors duration-300";
-      toggleBtn.innerText = "🌙";
-      toggleBtn.className = "p-2 rounded-xl bg-slate-700/80 hover:bg-slate-600 border border-slate-600 text-amber-400 transition flex items-center justify-center text-sm shadow";
-      
-      title.className = "text-xl font-extrabold tracking-wide text-white";
-      subtitle.className = "text-[10px] text-slate-400 font-medium";
-
-      dataCard.className = "bg-slate-900/80 p-4 rounded-2xl space-y-2 border border-slate-700/60 text-sm text-slate-100";
-      configCard.className = "bg-slate-900/40 border border-slate-700/80 p-4 rounded-2xl space-y-3";
-      searchCard.className = "bg-slate-900/60 border border-slate-700/60 p-4 rounded-2xl space-y-3";
-
-      footer.className = "text-center text-xs text-slate-300 font-medium pt-3 border-t border-slate-700/60 transition-colors duration-300";
-      author.className = "text-white font-extrabold text-sm tracking-wide";
-
-      textDarkTarget.forEach(el => {
-        el.classList.remove('text-slate-900');
-        el.classList.add('text-slate-200');
-      });
+  function formatearMontoEnTiempoReal(input) {
+    let valor = input.value.replace(/\D/g, '');
+    if (!valor) {
+      input.value = '';
+      return;
     }
+    let numero = (parseInt(valor, 10) / 100).toFixed(2);
+    let partes = numero.split('.');
+    partes[0] = partes[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    input.value = partes.join(',');
   }
 
   function aNombrePropio(texto) {
     if (!texto) return '';
     return texto.toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase());
+  }
+
+  function limpiarNombreDestinatario(texto) {
+    if (!texto) return '';
+    let limpio = texto
+      .replace(/\b[VEJGvejg][-\s]?[0-9]+/gi, '')
+      .replace(/[0-9]/g, '')
+      .replace(/^[VEJGvejg]\b\s*/i, '')
+      .replace(/[-_.]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    return aNombrePropio(limpio);
   }
 
   function formatearTelefonoVZLA(numero) {
@@ -306,6 +521,126 @@
     return `${text_fijo}`;
   }
 
+  function toggleFormManualNotificar() {
+    const form = document.getElementById('manual-notificar-form');
+    const estaOculto = form.classList.contains('hidden');
+    if (estaOculto) {
+      form.classList.remove('hidden');
+      document.getElementById('manual-input-guia').focus();
+    } else {
+      form.classList.add('hidden');
+    }
+  }
+
+  function onManualClaseChange() {
+    const clase = document.getElementById('manual-select-clase').value;
+    const montoContainer = document.getElementById('manual-monto-container');
+    if (clase === 'COD') {
+      montoContainer.classList.remove('hidden');
+    } else {
+      montoContainer.classList.add('hidden');
+    }
+  }
+
+  async function obtenerDataAPITracking(numeroGuia) {
+    if (MODO_ENV === 'APK' && window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.CapacitorHttp) {
+      const { CapacitorHttp } = window.Capacitor.Plugins;
+      const response = await CapacitorHttp.post({
+        url: 'https://mrwve.com/api/tracking',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        data: { nro_tracking: numeroGuia }
+      });
+      return typeof response.data === 'string' ? JSON.parse(response.data) : response.data;
+    } else {
+      const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://mrwve.com/api/tracking');
+      const response = await fetch(proxyUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ nro_tracking: numeroGuia })
+      });
+      if (!response.ok) throw new Error(`Servidor inalcanzable (${response.status})`);
+      return await response.json();
+    }
+  }
+
+  async function procesarNotificacionManual() {
+    const guiaInput = document.getElementById('manual-input-guia').value.trim();
+    const telDestinatario = document.getElementById('manual-input-telefono').value.trim();
+    const clase = document.getElementById('manual-select-clase').value;
+    const montoInput = document.getElementById('manual-input-monto').value.trim().replace(/\./g, '').replace(',', '.');
+    const cuponesInput = document.getElementById('manual-input-cupones').value.trim();
+    const btn = document.getElementById('btn-manual-procesar');
+
+    if (!/^\d{15}$/.test(guiaInput)) {
+      return alert("El número de guía debe contener exactamente 15 dígitos.");
+    }
+    if (!telDestinatario) {
+      return alert("Debe ingresar el número de teléfono del destinatario.");
+    }
+    if (clase === 'COD' && (!montoInput || isNaN(parseFloat(montoInput)) || parseFloat(montoInput) <= 0)) {
+      return alert("Debe ingresar un monto a pagar válido para envíos COD.");
+    }
+
+    btn.disabled = true;
+    const textoOriginal = btn.innerHTML;
+    btn.innerHTML = `⏳ Consultando...`;
+
+    try {
+      const apiData = await obtenerDataAPITracking(guiaInput);
+
+      if (!apiData || (!apiData.nro_envio && !apiData.nro_tracking)) {
+        alert("No se encontraron registros para la guía en MRW.");
+        btn.disabled = false;
+        btn.innerHTML = textoOriginal;
+        return;
+      }
+
+      currentData = {
+        guia: apiData.nro_envio || guiaInput,
+        remitente_nombre: apiData.remitente || 'MRW Origen',
+        remitente_telefono: '',
+        destinatario_nombre: apiData.destinatario || 'Cliente',
+        destinatario_telefono: telDestinatario,
+        peso: apiData.peso || '0.00',
+        precio: clase === 'COD' ? parseFloat(montoInput).toFixed(2) : '0.00',
+        cupones: cuponesInput !== '' ? cuponesInput : '0'
+      };
+
+      resetearSeleccionesUI();
+      mostrarResultadosNotificacion(currentData);
+
+    } catch (err) {
+      alert("Error al conectar con la API de MRW: " + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = textoOriginal;
+    }
+  }
+
+  function restablecerEstadoInicialNotificar() {
+    currentData = null;
+    document.getElementById('scan-trigger-container').classList.remove('hidden');
+    document.getElementById('result-container-notificar').classList.add('hidden');
+    document.getElementById('reset-btn-notificar').classList.add('hidden');
+    document.getElementById('qr-error-container').classList.add('hidden');
+    document.getElementById('manual-notificar-form').classList.add('hidden');
+    
+    document.getElementById('manual-input-guia').value = '';
+    document.getElementById('manual-input-telefono').value = '';
+    document.getElementById('manual-input-monto').value = '';
+    document.getElementById('manual-input-cupones').value = '1';
+    document.getElementById('manual-select-clase').value = 'COD';
+    onManualClaseChange();
+    
+    resetearSeleccionesUI();
+  }
+
   async function cambiarModulo(modulo) {
     await detenerCamaraWeb();
     const modNotificar = document.getElementById('modulo-notificar');
@@ -314,22 +649,21 @@
     const btnBuscar = document.getElementById('nav-btn-buscar');
 
     if (modulo === 'notificar') {
+      restablecerEstadoInicialNotificar();
       modNotificar.classList.remove('hidden');
       modBuscar.classList.add('hidden');
-      btnNotificar.className = "py-2.5 px-3 text-xs font-bold rounded-xl bg-blue-600 text-white shadow-md transition flex items-center justify-center gap-1.5";
-      btnBuscar.className = "py-2.5 px-3 text-xs font-semibold rounded-xl text-slate-400 hover:text-white transition flex items-center justify-center gap-1.5";
+      btnNotificar.className = "nav-btn active";
+      btnBuscar.className = "nav-btn inactive";
     } else {
-      // Al tocar la pestaña "Buscar Guía" se limpia el input y se enfoca
       const inputGuia = document.getElementById('input-buscar-guia');
       if (inputGuia) {
         inputGuia.value = '';
         inputGuia.focus();
       }
-
       modNotificar.classList.add('hidden');
       modBuscar.classList.remove('hidden');
-      btnBuscar.className = "py-2.5 px-3 text-xs font-bold rounded-xl bg-blue-600 text-white shadow-md transition flex items-center justify-center gap-1.5";
-      btnNotificar.className = "py-2.5 px-3 text-xs font-semibold rounded-xl text-slate-400 hover:text-white transition flex items-center justify-center gap-1.5";
+      btnBuscar.className = "nav-btn active";
+      btnNotificar.className = "nav-btn inactive";
     }
   }
 
@@ -359,7 +693,6 @@
   async function iniciarEscanerNativo(objetivo) {
     try {
       const { BarcodeScanner } = window.Capacitor.Plugins;
-
       const status = await BarcodeScanner.checkPermission({ force: true });
       if (!status.granted) {
         alert("Se requieren permisos de cámara para escanear.");
@@ -367,15 +700,11 @@
       }
 
       BarcodeScanner.hideBackground();
-      // Remover clases de fondo del body para permitir ver la cámara
-      document.body.classList.remove("bg-slate-900", "bg-slate-100");
-      document.body.classList.add("bg-transparent");
-      
+      document.body.style.background = "transparent";
       document.getElementById("main-card").classList.add("hidden");
       document.getElementById("scanner-overlay").classList.remove("hidden");
 
       const result = await BarcodeScanner.startScan();
-
       restaurarInterfazWeb();
 
       if (result && result.hasContent) {
@@ -383,13 +712,10 @@
       }
     } catch (err) {
       restaurarInterfazWeb();
-
       const errorMsg = (err.message || JSON.stringify(err) || '').toLowerCase();
-      if (errorMsg.includes('canceled') || errorMsg.includes('cancelled') || errorMsg.includes('user canceled')) {
-        return;
+      if (!errorMsg.includes('canceled') && !errorMsg.includes('cancelled')) {
+        alert("Error en cámara nativa: " + (err.message || JSON.stringify(err)));
       }
-
-      alert("Error en cámara nativa: " + (err.message || JSON.stringify(err)));
     }
   }
 
@@ -399,7 +725,7 @@
         await window.Capacitor.Plugins.BarcodeScanner.stopScan();
       }
     } catch (e) {
-      console.warn("Deteniendo escáner:", e);
+      console.warn(e);
     } finally {
       restaurarInterfazWeb();
     }
@@ -409,10 +735,7 @@
     if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.BarcodeScanner) {
       window.Capacitor.Plugins.BarcodeScanner.showBackground();
     }
-    document.body.classList.remove("bg-transparent");
-    // Restaurar el color de fondo correspondiente al tema activo
-    document.body.classList.add(isDarkMode ? "bg-slate-900" : "bg-slate-100");
-
+    document.body.style.background = "";
     document.getElementById("main-card").classList.remove("hidden");
     document.getElementById("scanner-overlay").classList.add("hidden");
   }
@@ -431,26 +754,22 @@
         manejadorQRLeido(decodedText, objetivo);
       },
       () => {}
-    ).catch(err => alert("Error abriendo cámara: " + err));
+    ).catch(err => alert("Error abriendo cámara web: " + err));
   }
 
   function esEnlaceURL(texto) {
-    const patronURL = /^(https?:\/\/|www\.)[^\s/$.?#].[^\s]*$/i;
-    return patronURL.test(texto.trim());
+    return /^(https?:\/\/|www\.)[^\s/$.?#].[^\s]*$/i.test(texto.trim());
   }
 
   async function manejadorQRLeido(rawText, objetivo) {
     const textoLimpio = rawText.trim();
-
     if (esEnlaceURL(textoLimpio)) {
       await manejarErrorEscaneo("No se admiten enlaces URL en las etiquetas.", objetivo);
       return;
     }
 
     const dataParsed = parsearDataQR(rawText);
-
-    const esGuiaValida = dataParsed.guia && dataParsed.guia !== 'N/A' && dataParsed.guia.length >= 6;
-    if (!esGuiaValida) {
+    if (!dataParsed.guia || dataParsed.guia === 'N/A' || dataParsed.guia.length < 6) {
       await manejarErrorEscaneo("QR no válido. Asegúrese de escanear una etiqueta de envío de MRW.", objetivo);
       return;
     }
@@ -467,7 +786,6 @@
 
   async function manejarErrorEscaneo(mensaje, objetivo) {
     alert("⚠️ " + mensaje);
-
     if (MODO_ENV === 'APK') {
       iniciarEscanerNativo(objetivo);
     } else {
@@ -479,12 +797,9 @@
     const inputEl = document.getElementById('input-buscar-guia');
     const numGuia = inputEl.value.trim();
 
-    // Validar que contenga exactamente 15 dígitos numéricos
     if (!/^\d{15}$/.test(numGuia)) {
       return alert("El número de guía debe contener exactamente 15 dígitos.");
     }
-
-    // Se mantiene el número en pantalla durante la consulta
     consultarAPI(numGuia);
   }
 
@@ -495,47 +810,15 @@
     card.classList.add('hidden');
 
     try {
-      let data;
-
-      if (MODO_ENV === 'APK' && window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.CapacitorHttp) {
-        const { CapacitorHttp } = window.Capacitor.Plugins;
-
-        const response = await CapacitorHttp.post({
-          url: 'https://mrwve.com/api/tracking',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          data: { nro_tracking: numeroGuia }
-        });
-
-        data = typeof response.data === 'string' ? JSON.parse(response.data) : response.data;
-
-      } else {
-        const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://mrwve.com/api/tracking');
-        const response = await fetch(proxyUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify({ nro_tracking: numeroGuia })
-        });
-
-        if (!response.ok) throw new Error(`Servidor inalcanzable (${response.status})`);
-        data = await response.json();
-      }
-
+      const data = await obtenerDataAPITracking(numeroGuia);
       if (!data || (!data.nro_envio && !data.nro_tracking)) {
         alert("No se encontraron registros para la guía especificada.");
         loading.classList.add('hidden');
         return;
       }
-
       renderizarDatosAPI(data);
       loading.classList.add('hidden');
       card.classList.remove('hidden');
-
     } catch (error) {
       loading.classList.add('hidden');
       alert("Error de conexión con MRW: " + error.message);
@@ -544,7 +827,6 @@
 
   function formatearFecha12H(fechaStr) {
     if (!fechaStr || fechaStr === 'N/A') return 'N/A';
-    
     const fechaObj = new Date(fechaStr.replace(/-/g, '/'));
     if (isNaN(fechaObj.getTime())) return fechaStr;
 
@@ -555,21 +837,16 @@
     let horas = fechaObj.getHours();
     const minutos = String(fechaObj.getMinutes()).padStart(2, '0');
     const ampm = horas >= 12 ? 'PM' : 'AM';
+    horas = horas % 12 || 12;
 
-    horas = horas % 12;
-    horas = horas ? horas : 12;
-    const horasStr = String(horas).padStart(2, '0');
-
-    return `${dia}/${mes}/${anio} ${horasStr}:${minutos} ${ampm}`;
+    return `${dia}/${mes}/${anio} ${String(horas).padStart(2, '0')}:${minutos} ${ampm}`;
   }
 
   function renderizarDatosAPI(data) {
     const card = document.getElementById('search-result-card');
-    
     let modalidadTexto = "No especificado";
     const desc = (data.descripcion || '').toUpperCase();
     const tipo = (data.tipo_envio || '').toLowerCase();
-
     const esCOD = desc === "CD" || tipo.includes("cobro") || tipo.includes("cod");
 
     if (esCOD) {
@@ -581,9 +858,7 @@
     }
 
     const tieneNumAlterno = data.num_alterno && data.num_alterno.trim() !== '' && data.num_alterno.trim().toUpperCase() !== 'N/A';
-    const badgeCasheaCorp = (tieneNumAlterno && !esCOD)
-      ? `<span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-purple-500/20 text-purple-300 border border-purple-500/40 ml-1">CASHEA / CORP</span>` 
-      : '';
+    const badgeCasheaCorp = (tieneNumAlterno && !esCOD) ? `<span style="background: rgba(147, 51, 234, 0.15); color: #9333ea; border: 1px solid rgba(147, 51, 234, 0.4); padding: 0.1rem 0.4rem; border-radius: 0.35rem; font-size: 0.65rem; font-weight: 800; margin-left: 0.25rem;">CASHEA / CORP</span>` : '';
 
     const tipoPaqueteTexto = data.tipo_paquete ? (data.tipo_paquete.charAt(0).toUpperCase() + data.tipo_paquete.slice(1)) : "No especificado";
 
@@ -596,64 +871,60 @@
       etiquetaEstado = ultimoMovimiento.estatus || "CONSULTADO";
       const ubicacion = ultimoMovimiento.agencia || ultimoMovimiento.estado || '';
       ultimoEstatus = `${ultimoMovimiento.estatus} ${ubicacion ? '— ' + ubicacion : ''}`;
-      
-      const rawFecha = ultimoMovimiento.fecha || ultimoMovimiento.fecha_scan || "N/A";
-      fechaHoraUltimoEstatus = formatearFecha12H(rawFecha);
+      fechaHoraUltimoEstatus = formatearFecha12H(ultimoMovimiento.fecha || ultimoMovimiento.fecha_scan || "N/A");
     }
 
     card.innerHTML = `
-      <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--divider); padding-bottom: 0.5rem;">
         <div>
-          <p class="text-[10px] text-slate-400 font-bold uppercase">N° de Guía</p>
-          <p class="font-black text-blue-400 tracking-wider text-base">${data.nro_envio}</p>
+          <p class="field-label">N° de Guía</p>
+          <p style="font-weight: 900; color: #2563eb; font-size: 1rem;">${data.nro_envio}</p>
         </div>
-        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+        <span style="background: rgba(5, 150, 105, 0.15); color: #059669; padding: 0.2rem 0.5rem; border-radius: 9999px; font-size: 0.65rem; font-weight: 800;">
           ${etiquetaEstado.toUpperCase()}
         </span>
       </div>
       
-      <div class="grid grid-cols-2 gap-2 text-xs pt-1">
-        <div class="bg-slate-800/40 p-2 rounded-xl">
-          <p class="text-[10px] text-slate-400 font-bold uppercase">Tipo / Peso</p>
-          <p class="text-slate-200 font-semibold">📦 ${tipoPaqueteTexto} (${data.peso || '0'} Kg)</p>
+      <div class="grid-2" style="padding-top: 0.25rem;">
+        <div class="stat-pill" style="text-align: left;">
+          <p class="field-label">Tipo / Peso</p>
+          <p style="font-weight: 600;">📦 ${tipoPaqueteTexto} (${data.peso || '0'} Kg)</p>
         </div>
-        <div class="bg-slate-800/40 p-2 rounded-xl">
-          <p class="text-[10px] text-slate-400 font-bold uppercase">Modalidad</p>
-          <p class="text-amber-400 font-semibold flex items-center flex-wrap">
-            💳 ${modalidadTexto} ${badgeCasheaCorp}
-          </p>
+        <div class="stat-pill" style="text-align: left;">
+          <p class="field-label">Modalidad</p>
+          <p style="font-weight: 600; color: #d97706;">💳 ${modalidadTexto} ${badgeCasheaCorp}</p>
         </div>
       </div>
 
       ${data.descripcion && data.descripcion !== "CD" ? `
-      <div class="bg-slate-800/30 p-2 rounded-xl text-xs space-y-0.5 border border-slate-700/40">
-        <p class="text-[10px] text-slate-400 font-bold uppercase">Descripción de Mercancía:</p>
-        <p class="text-slate-200 font-medium leading-relaxed">${data.descripcion}</p>
+      <div class="stat-pill" style="text-align: left;">
+        <p class="field-label">Descripción de Mercancía:</p>
+        <p style="font-weight: 500;">${data.descripcion}</p>
       </div>
       ` : ''}
 
-      <div class="space-y-0.5 text-xs">
-        <p class="text-[10px] text-slate-400 font-bold uppercase">Destinatario:</p>
-        <p class="text-slate-200 font-medium">${aNombrePropio(data.destinatario) || 'N/A'}</p>
+      <div style="font-size: 0.8rem;">
+        <p class="field-label">Destinatario:</p>
+        <p style="font-weight: 600;">${aNombrePropio(data.destinatario) || 'N/A'}</p>
       </div>
 
-      <div class="grid grid-cols-2 gap-2 text-xs border-t border-slate-800 pt-2">
+      <div class="grid-2" style="border-top: 1px solid var(--divider); padding-top: 0.5rem;">
         <div>
-          <p class="text-slate-400 font-semibold text-[10px] uppercase">Origen</p>
-          <p class="text-slate-300 font-medium truncate">${data.agencia_origen || 'N/A'}</p>
+          <p class="field-label">Origen</p>
+          <p style="font-size: 0.75rem; color: var(--text-muted);">${data.agencia_origen || 'N/A'}</p>
         </div>
         <div>
-          <p class="text-slate-400 font-semibold text-[10px] uppercase">Destino</p>
-          <p class="text-slate-300 font-medium truncate">${data.agencia_destino || 'N/A'}</p>
+          <p class="field-label">Destino</p>
+          <p style="font-size: 0.75rem; color: var(--text-muted);">${data.agencia_destino || 'N/A'}</p>
         </div>
       </div>
 
-      <div class="bg-blue-950/40 border border-blue-500/30 p-2.5 rounded-xl space-y-1 text-xs">
-        <div class="flex justify-between items-center">
-          <p class="text-[10px] text-blue-300 font-bold uppercase">Último Movimiento Registrado:</p>
-          <p class="text-[10px] text-slate-400 font-mono">${fechaHoraUltimoEstatus}</p>
+      <div style="background: var(--scan-box-bg); border: 1px solid var(--scan-box-border); padding: 0.65rem; border-radius: 0.75rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+          <p style="font-size: 0.65rem; color: #2563eb; font-weight: 800; text-transform: uppercase;">Último Movimiento Registrado:</p>
+          <p style="font-size: 0.65rem; color: var(--text-muted); font-family: monospace;">${fechaHoraUltimoEstatus}</p>
         </div>
-        <p class="text-slate-200 font-semibold">${ultimoEstatus}</p>
+        <p style="font-weight: 700; font-size: 0.8rem;">${ultimoEstatus}</p>
       </div>
     `;
   }
@@ -707,9 +978,11 @@
     claseSeleccionada = null;
     tipoSeleccionado = null;
     adicionalSeleccionado = null;
+
     document.querySelectorAll('.btn-clase, .btn-tipo, .btn-adicional').forEach(btn => {
-      btn.className = btn.className.replace('bg-blue-600', 'bg-slate-800').replace('text-white font-bold', 'text-slate-200');
+      btn.classList.remove('selected');
     });
+
     validarYActualizarBotones();
   }
 
@@ -723,20 +996,18 @@
     actualizarGrupoUI('#group-tipo .btn-tipo', v); 
   }
   
-  function seleccionarAdicional(v) {
-    adicionalSeleccionado = v;
-    actualizarGrupoUI('#group-adicional .btn-adicional', v);
+  function seleccionarAdicional(v) { 
+    adicionalSeleccionado = v; 
+    actualizarGrupoUI('#group-adicional .btn-adicional', v); 
   }
 
   function actualizarGrupoUI(selector, valorBuscado) {
     document.querySelectorAll(selector).forEach(btn => {
       const matchExacto = btn.getAttribute('onclick').includes(`'${valorBuscado}'`);
       if (matchExacto) {
-        btn.classList.remove('bg-slate-800', 'text-slate-200');
-        btn.classList.add('bg-blue-600', 'text-white', 'font-bold');
+        btn.classList.add('selected');
       } else {
-        btn.classList.remove('bg-blue-600', 'text-white', 'font-bold');
-        btn.classList.add('bg-slate-800', 'text-slate-200');
+        btn.classList.remove('selected');
       }
     });
     validarYActualizarBotones();
@@ -763,13 +1034,15 @@
     const alerta = document.getElementById('alerta-seleccion');
 
     if (!claseSeleccionada || !tipoSeleccionado || !adicionalSeleccionado) {
-      actions.classList.add('opacity-40', 'pointer-events-none');
+      actions.style.opacity = '0.4';
+      actions.style.pointerEvents = 'none';
       alerta.classList.remove('hidden');
       actions.innerHTML = '';
       return;
     }
 
-    actions.classList.remove('opacity-40', 'pointer-events-none');
+    actions.style.opacity = '1';
+    actions.style.pointerEvents = 'auto';
     alerta.classList.add('hidden');
     generarBotonesMensajeria(currentData, claseSeleccionada, tipoSeleccionado, adicionalSeleccionado);
   }
@@ -779,7 +1052,7 @@
     actions.innerHTML = '';
 
     const guiaCorta = data.guia ? data.guia.toString().slice(0, 2) : 'N/A';
-    const nombreDestinatario = aNombrePropio(data.destinatario_nombre);
+    const nombreDestinatario = limpiarNombreDestinatario(data.destinatario_nombre);
     const nombreRemitente = aNombrePropio(data.remitente_nombre);
 
     let detallesPaquete = `• Peso: ${data.peso} Kg`;
@@ -798,34 +1071,34 @@
 
       const plantillaSMS_Dest = `¡Feliz y bendecido día! \n\nEstimad@ ${nombreDestinatario}, le escribimos de MRW ${NAME_AGENCIA}\nEstamos ubicados en la ${ADDRESS_AGENCIA} y laboramos horario corrido desde 08:00 AM hasta las 04:50 PM.\n\nNos complace informarle que su encomieda de tipo ${tipoYClase} con guía ${guiaCorta} se encuentra lista para ser retirada en oficina.\n\nDetalles del envío:\n${detallesPaquete}\n\n`;
 
-      actions.appendChild(crearBotonApp(`💬 WhatsApp Destinatario`, `https://wa.me/${phoneDest}?text=${encodeURIComponent(plantillaWA_Dest)}`, 'bg-emerald-600 hover:bg-emerald-500 text-white'));
-      actions.appendChild(crearBotonApp(`📱 SMS Destinatario`, `sms:${phoneDest}?body=${encodeURIComponent(plantillaSMS_Dest)}`, 'bg-blue-600 hover:bg-blue-500 text-white'));
+      actions.appendChild(crearBotonApp(`💬 WhatsApp Destinatario`, `https://wa.me/${phoneDest}?text=${encodeURIComponent(plantillaWA_Dest)}`, 'btn-whatsapp'));
+      actions.appendChild(crearBotonApp(`📱 SMS Destinatario`, `sms:${phoneDest}?body=${encodeURIComponent(plantillaSMS_Dest)}`, 'btn-sms'));
     }
 
     if (data.remitente_telefono) {
       const phoneRem = formatearTelefonoVZLA(data.remitente_telefono);
-      const plantillaWA_Rem = `Hola ${nombreRemitente}, le escribimos de MRW El Tigre Centro.\n\nLe notificamos que el envío *${tipoYClase}* con guía 🏷️ *${guiaCorta}* consignado a *${nombreDestinatario}* no fue retirado y ha sido devuelto a origen.\n\n📋 *Detalles del envío:*\n${detallesPaquete}`;
+      const plantillaWA_Rem = `Hola ${nombreRemitente}, le escribimos de MRW ${NAME_AGENCIA}.\n\nLe notificamos que el envío *${tipoYClase}* con guía 🏷️ *${guiaCorta}* consignado a *${nombreDestinatario}* no fue retirado y ha sido devuelto a origen.\n\n📋 *Detalles del envío:*\n${detallesPaquete}`;
 
-      actions.appendChild(crearBotonApp(`💬 WhatsApp Remitente`, `https://wa.me/${phoneRem}?text=${encodeURIComponent(plantillaWA_Rem)}`, 'bg-teal-600 hover:bg-teal-500 text-white'));
+      actions.appendChild(crearBotonApp(`💬 WhatsApp Remitente`, `https://wa.me/${phoneRem}?text=${encodeURIComponent(plantillaWA_Rem)}`, 'btn-remitente'));
     }
   }
 
-  function crearBotonApp(texto, url, clasesColor) {
+  function crearBotonApp(texto, url, claseColor) {
     const btn = document.createElement('a');
     btn.href = url;
     btn.target = "_blank";
-    btn.className = `w-full font-bold py-3 px-4 rounded-xl text-center shadow-lg flex items-center justify-center gap-2 transition text-sm ${clasesColor}`;
+    btn.className = `btn-app ${claseColor}`;
     btn.innerHTML = texto;
     return btn;
   }
 
   function reiniciarNotificador() {
-    document.getElementById('reset-btn-notificar').classList.add('hidden');
-    document.getElementById('result-container-notificar').classList.add('hidden');
-    document.getElementById('scan-trigger-container').classList.remove('hidden');
-    resetearSeleccionesUI();
+    restablecerEstadoInicialNotificar();
     escanearSegunEntorno('notificar');
   }
+
+  // Inicialización directa
+  restablecerEstadoInicialNotificar();
   </script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 {
-  "appId": "com.quicky.mrw03020",
-  "appName": "Quicky 03020",
+  "appId": "com.quickypro.mrw",
+  "appName": "Quicky Pro",
   "webDir": "www",
   "plugins": {
     "CapacitorHttp": {

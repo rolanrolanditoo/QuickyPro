@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quicky | MRW</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Librería para lectura QR en navegador Web/Local -->
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+</head>
+<body id="app-body" class="bg-slate-900 min-h-screen p-4 text-slate-100 font-sans transition-colors duration-300">
+
+  <div id="main-card" class="max-w-md mx-auto bg-slate-800 rounded-3xl shadow-2xl border border-slate-700/80 p-5 space-y-4 transition-colors duration-300">
+    
+    <!-- Header principal con Modo Nocturno / Día -->
+    <div id="header-container" class="flex items-center justify-between border-b border-slate-700/60 pb-3">
+      <div class="flex items-center gap-2">
+        <span class="text-2xl">🤌🏽⚡</span>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 id="app-title" class="text-xl font-extrabold tracking-wide text-white">Quicky Pro</h1>
+          </div>
+          <p id="app-subtitle" class="text-[10px] text-slate-400 font-medium">MRW</p>
+        </div>
+      </div>
+      <!-- Botón Modo Día / Nocturno -->
+      <button id="theme-toggle-btn" onclick="toggleTheme()" class="p-2 rounded-xl bg-slate-700/80 hover:bg-slate-600 border border-slate-600 text-amber-400 transition flex items-center justify-center text-sm shadow">
+        🌙
+      </button>
+    </div>
+
+    <!-- Menú Principal: Navegación de 2 Botones -->
+    <div id="nav-container" class="grid grid-cols-2 gap-2 p-1 bg-slate-900/60 rounded-2xl border border-slate-700/60">
+      <button id="nav-btn-notificar" onclick="cambiarModulo('notificar')" class="py-2.5 px-3 text-xs font-bold rounded-xl bg-blue-600 text-white shadow-md transition flex items-center justify-center gap-1.5">
+        <span>💬</span> Notificar
+      </button>
+      <button id="nav-btn-buscar" onclick="cambiarModulo('buscar')" class="py-2.5 px-3 text-xs font-semibold rounded-xl text-slate-400 hover:text-white transition flex items-center justify-center gap-1.5">
+        <span>🔍</span> Buscar Guía
+      </button>
+    </div>
+
+    <!-- MÓDULO 1: NOTIFICAR A CLIENTES -->
+    <div id="modulo-notificar" class="space-y-4">
+      <!-- 1. Contenedor para abrir cámara / lector QR web -->
+      <div id="scan-trigger-container" class="p-5 text-center border-2 border-dashed border-blue-500/30 bg-blue-950/30 rounded-2xl space-y-3">
+        <p id="scan-subtitle" class="text-xs text-slate-300 font-medium">Escaneo de QR</p>
+        <button onclick="escanearSegunEntorno('notificar')" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2 text-sm">
+          📷 ABRIR CÁMARA
+        </button>
+        <div id="web-reader-notificar" class="hidden overflow-hidden rounded-xl border border-slate-600 mt-2"></div>
+
+        <!-- Botón para desplegar formulario manual por guía/API -->
+        <button type="button" id="btn-toggle-manual" onclick="toggleFormManualNotificar()" class="w-full mt-2 border border-slate-700 hover:border-slate-600 bg-slate-900/80 hover:bg-slate-900 text-slate-300 font-semibold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2 shadow">
+          ✍🏽 Ingresar Guía Manualmente
+        </button>
+
+        <!-- Formulario Desplegable Manual -->
+        <div id="manual-notificar-form" class="hidden text-left bg-slate-900/90 border border-slate-700/80 p-4 rounded-xl space-y-3 mt-3">
+          <p id="manual-form-title" class="text-[11px] font-bold text-blue-400 uppercase tracking-wider text-center">Carga Manual por Guía</p>
+          
+          <div>
+            <label id="lbl-manual-guia" class="block text-[11px] font-semibold text-slate-300 mb-1">N° de Guía:</label>
+            <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="15" id="manual-input-guia" placeholder="000000000000000" autocomplete="off" class="input-theme w-full bg-slate-950/90 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500">
+          </div>
+
+          <div>
+            <label id="lbl-manual-tel" class="block text-[11px] font-semibold text-slate-300 mb-1">Teléfono Destinatario:</label>
+            <input type="tel" inputmode="numeric" id="manual-input-telefono" placeholder="Ej: 04141234567" autocomplete="off"class="input-theme w-full bg-slate-950/90 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500">
+          </div>
+
+          <div>
+            <label id="lbl-manual-clase" class="block text-[11px] font-semibold text-slate-300 mb-1">Clase de Envío:</label>
+            <select id="manual-select-clase" onchange="onManualClaseChange()" class="input-theme w-full bg-slate-950/90 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500">
+              <option value="COD">COD</option>
+              <option value="PAGADO">PAGADO</option>
+              <option value="CASHEA">CASHEA</option>
+              <option value="CORPORATIVO">CORPORATIVO</option>
+            </select>
+          </div>
+
+          <div id="manual-monto-container">
+            <label id="lbl-manual-monto" class="block text-[11px] font-semibold text-slate-300 mb-1">Monto a Pagar (Bs.):</label>
+            <input type="text" inputmode="numeric" id="manual-input-monto" oninput="formatearMontoEnTiempoReal(this)" autocomplete="off" placeholder="0,00" class="input-theme w-full bg-slate-950/90 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500">
+          </div>
+
+          <div>
+            <label id="lbl-manual-cupones" class="block text-[11px] font-semibold text-slate-300 mb-1">N° de Cupones:</label>
+            <input type="number" min="1" id="manual-input-cupones" placeholder="1" value="1" autocomplete="off" class="input-theme w-full bg-slate-950/90 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500">
+          </div>
+
+          <button type="button" id="btn-manual-procesar" onclick="procesarNotificacionManual()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition shadow-lg flex items-center justify-center gap-2">
+            🔍 Consultar y Notificar
+          </button>
+        </div>
+      </div>
+
+      <!-- 2. Contenedor de ERROR cuando el QR no es válido o es una URL -->
+      <div id="qr-error-container" class="hidden p-5 text-center bg-red-950/30 border-2 border-dashed border-red-500/40 rounded-2xl space-y-3">
+        <p id="qr-error-msg" class="text-xs text-red-300 font-bold leading-relaxed"></p>
+        <button onclick="reiniciarNotificador()" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition shadow-lg flex items-center justify-center gap-2">
+          🔄 Reintentar escaneo
+        </button>
+      </div>
+
+      <!-- 3. Botón para escanear otro código cuando la lectura fue exitosa -->
+      <button id="reset-btn-notificar" onclick="reiniciarNotificador()" class="hidden w-full bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2 text-sm">
+        🔄 Escanear otro código
+      </button>
+
+      <!-- Panel de Opciones y Resultados de Notificación -->
+      <div id="result-container-notificar" class="hidden space-y-4">
+        
+        <div id="data-card-notificar" class="bg-slate-900/80 p-4 rounded-2xl space-y-2 border border-slate-700/60 text-sm">
+          <div id="data-card-header" class="flex justify-between border-b border-slate-800 pb-2">
+            <span class="text-slate-400 font-medium text-xs">Guía / Tracking:</span>
+            <span id="res-guia" class="font-black text-blue-400 tracking-wider">-</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <div>
+              <p class="text-[10px] text-slate-400 uppercase font-bold">Remitente</p>
+              <p id="res-remitente" class="font-semibold text-slate-200 truncate">-</p>
+              <p id="res-tel-remitente" class="text-xs text-blue-400 font-mono">-</p>
+            </div>
+            <div>
+              <p class="text-[10px] text-slate-400 uppercase font-bold">Destinatario</p>
+              <p id="res-destinatario" class="font-semibold text-slate-200 truncate">-</p>
+              <p id="res-tel-destinatario" class="text-xs text-blue-400 font-mono">-</p>
+            </div>
+          </div>
+          <div id="data-card-footer" class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-800 text-xs text-center">
+            <div class="stat-pill bg-slate-800/50 p-1.5 rounded-lg border border-transparent">
+              <p class="text-[10px] text-slate-400 font-semibold">Peso</p>
+              <p id="res-peso" class="font-bold text-slate-200">- Kg</p>
+            </div>
+            <div class="stat-pill bg-slate-800/50 p-1.5 rounded-lg border border-transparent">
+              <p class="text-[10px] text-slate-400 font-semibold">Monto</p>
+              <p id="res-precio" class="font-bold text-emerald-400">Bs. -</p>
+            </div>
+            <div class="stat-pill bg-slate-800/50 p-1.5 rounded-lg border border-transparent">
+              <p class="text-[10px] text-slate-400 font-semibold">Cupones</p>
+              <p id="res-cupones" class="font-bold text-purple-400">-</p>
+            </div>
+          </div>
+        </div>
+
+        <div id="config-card-notificar" class="bg-slate-900/40 border border-slate-700/80 p-4 rounded-2xl space-y-3">
+          <h3 class="text-[11px] font-bold text-blue-400 uppercase tracking-wider">Configuración del Envío</h3>
+          
+          <div class="space-y-1">
+            <label id="lbl-clase" class="block text-xs font-semibold text-slate-300">1. Clase:</label>
+            <div class="grid grid-cols-2 gap-2" id="group-clase">
+              <button type="button" onclick="seleccionarClase('COD')" class="btn-clase py-2 px-3 text-xs font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200">COD</button>
+              <button type="button" onclick="seleccionarClase('PAGADO')" class="btn-clase py-2 px-3 text-xs font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200">PAGADO</button>
+              <button type="button" onclick="seleccionarClase('CASHEA')" class="btn-clase py-2 px-3 text-xs font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200">CASHEA</button>
+              <button type="button" onclick="seleccionarClase('CORPORATIVO')" class="btn-clase py-2 px-3 text-xs font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200">CORPORATIVO</button>
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <label id="lbl-tipo" class="block text-xs font-semibold text-slate-300">2. Tipo:</label>
+            <div class="grid grid-cols-2 gap-2" id="group-tipo">
+              <button type="button" onclick="seleccionarTipo('Sobre')" class="btn-tipo py-2 px-3 text-xs font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200">📨 Sobre</button>
+              <button type="button" onclick="seleccionarTipo('Paquete')" class="btn-tipo py-2 px-3 text-xs font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200">📦 Paquete</button>
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <label id="lbl-adicional" class="block text-xs font-semibold text-slate-300">3. Adicional:</label>
+            <div class="grid grid-cols-3 gap-1.5" id="group-adicional">
+              <button type="button" onclick="seleccionarAdicional('NINGUNO')" class="btn-adicional py-2 px-1.5 text-[11px] font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200">Ninguno</button>
+              <button type="button" onclick="seleccionarAdicional('DEVOLUCION')" class="btn-adicional py-2 px-1.5 text-[11px] font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200">Devolución</button>
+              <button type="button" onclick="seleccionarAdicional('FERIADO')" class="btn-adicional py-2 px-1.5 text-[11px] font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200">Feriado</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="alerta-seleccion" class="p-3 bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs rounded-xl text-center font-medium">
+          ⚠️ Complete la configuración para activar la mensajería.
+        </div>
+
+        <div id="actions-container" class="flex flex-col gap-2.5 transition-all"></div>
+      </div>
+    </div>
+
+    <!-- MÓDULO 2: BÚSQUEDA Y CONSULTA EN API -->
+    <div id="modulo-buscar" class="hidden space-y-4">
+      <div id="search-card" class="bg-slate-900/60 border border-slate-700/60 p-4 rounded-2xl space-y-3">
+        <label id="lbl-buscar" class="block text-xs font-bold text-slate-300 uppercase tracking-wider">
+          Consulta Guía en Rastreo online MRW
+        </label>
+        <div class="flex gap-2">
+          <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="15" id="input-buscar-guia" onkeydown="if(event.key === 'Enter') buscarGuiaPorNumero()" placeholder="" class="input-theme w-full bg-slate-950/80 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500" autocomplete="off">
+          <button onclick="buscarGuiaPorNumero()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition">
+            Buscar
+          </button>
+        </div>
+        <div class="relative flex py-1 items-center">
+          <div id="divider-search-left" class="flex-grow border-t border-slate-800"></div>
+          <span id="text-o-escanear" class="flex-shrink mx-2 text-[10px] text-slate-500 font-bold uppercase">o escanear</span>
+          <div id="divider-search-right" class="flex-grow border-t border-slate-800"></div>
+        </div>
+        <button id="btn-scan-buscar" onclick="escanearSegunEntorno('buscar')" class="w-full border border-blue-500/40 bg-blue-950/20 hover:bg-blue-900/40 text-blue-300 font-semibold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2">
+          📷 Escanear QR para consultar en Rastreo
+        </button>
+        <div id="web-reader-buscar" class="hidden overflow-hidden rounded-xl border border-slate-600 mt-2"></div>
+      </div>
+
+      <div id="search-loading" class="hidden text-center py-6 space-y-2">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent"></div>
+        <p id="search-loading-text" class="text-xs text-slate-400 font-medium">Consultando Rastreo de MRW...</p>
+      </div>
+
+      <div id="search-result-card" class="hidden bg-slate-900/80 p-4 rounded-2xl border border-slate-700/60 space-y-3 text-sm"></div>
+    </div>
+
+    <!-- Footer -->
+    <p id="app-footer" class="text-center text-xs text-slate-300 font-medium pt-3 border-t border-slate-700/60 transition-colors duration-300">
+      Desarrollado por: <span id="app-author" class="text-white font-extrabold text-sm tracking-wide">Rolando Palma (RolanditoDev)</span>
+    </p>
+
+  </div>
+
+  <!-- UI Flotante sobre la cámara para cancelar -->
+  <div id="scanner-overlay" class="hidden fixed inset-0 z-50 flex flex-col justify-between p-6 pointer-events-none">
+    <div class="flex justify-between items-center pointer-events-auto">
+      <span class="bg-slate-900/80 text-slate-200 text-xs px-3 py-1.5 rounded-full border border-slate-700/80 font-medium">
+        📷 Escaneando QR...
+      </span>
+      <button onclick="detenerEscanerNativo()" class="bg-red-600 hover:bg-red-500 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-2xl flex items-center gap-1 active:scale-95 transition">
+        ✖ Cancelar
+      </button>
+    </div>
+
+    <div class="self-center w-64 h-64 border-2 border-dashed border-blue-400/80 rounded-3xl bg-blue-500/5"></div>
+
+    <div class="text-center pointer-events-auto">
+      <button onclick="detenerEscanerNativo()" class="bg-slate-900/90 hover:bg-slate-800 text-slate-200 font-bold py-3 px-6 rounded-2xl text-xs border border-slate-700 shadow-2xl transition">
+        🔙 Volver
+      </button>
+    </div>
+  </div>
+
+  <script>
+  const MODO_ENV = 'APK'; // 'WEB' | 'APK'
+
+  // Variables mutables para los datos de la agencia
+  let CODE_AGENCIA = '03020';
+  let NAME_AGENCIA = 'El Tigre';
+  let ADDRESS_AGENCIA = 'Av. Francisco de Miranda con Calle 18 Sur, Edificio Los Geranios al lado de la Panadería Siria';
+  let PLAZO_AGENCIA = '7 días';
+
+  function actualizarUIInformacionAgencia() {
+    document.title = `Quicky | MRW ${CODE_AGENCIA} ${NAME_AGENCIA}`;
+    const titulo_app = document.getElementById('app-subtitle');
+    if (titulo_app) titulo_app.textContent = `MRW ${CODE_AGENCIA} ${NAME_AGENCIA}`;
+
+    const input_guia = document.getElementById('input-buscar-guia');
+    const manual_input_guia = document.getElementById('manual-input-guia');
+    if (input_guia) input_guia.placeholder = `00000${CODE_AGENCIA}00000`;
+    if (manual_input_guia) manual_input_guia.placeholder = `00000${CODE_AGENCIA}00000`;
+  }
+
+  async function cargarDatosAgencia() {
+    try {
+      const response = await fetch('./data.json');
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      
+      CODE_AGENCIA = data.code_agencia || CODE_AGENCIA;
+      NAME_AGENCIA = data.name_agencia || NAME_AGENCIA;
+      ADDRESS_AGENCIA = data.address_agencia || ADDRESS_AGENCIA;
+      PLAZO_AGENCIA = data.plazo_agencia || PLAZO_AGENCIA;
+    } catch (err) {
+      console.warn("No se pudo cargar data.json, usando valores por defecto:", err);
+    } finally {
+      actualizarUIInformacionAgencia();
+    }
+  }
+
+  // Inicializar carga de datos de la agencia
+  cargarDatosAgencia();
+
+  function formatearMontoEnTiempoReal(input) {
+    let valor = input.value.replace(/\D/g, '');
+    if (!valor) {
+      input.value = '';
+      return;
+    }
+    let numero = (parseInt(valor, 10) / 100).toFixed(2);
+    let partes = numero.split('.');
+    partes[0] = partes[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    input.value = partes.join(',');
+  }
+
+  function limpiarNombreDestinatario(texto) {
+    if (!texto) return '';
+    let limpio = texto
+      .replace(/\b[VEJGvejg][-\s]?[0-9]+/gi, '')
+      .replace(/[0-9]/g, '')
+      .replace(/^[VEJGvejg]\b\s*/i, '')
+      .replace(/[-_.]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    return aNombrePropio(limpio);
+  }
+
+  let html5QrcodeScanner = null;
+  let currentData = null;
+  let claseSeleccionada = null;
+  let tipoSeleccionado = null;
+  let adicionalSeleccionado = null;
+  let isDarkMode = false;
+
+  function toggleFormManualNotificar() {
+    const form = document.getElementById('manual-notificar-form');
+    form.classList.toggle('hidden');
+    if (!form.classList.contains('hidden')) {
+      document.getElementById('manual-input-guia').focus();
+    }
+  }
+
+  function onManualClaseChange() {
+    const clase = document.getElementById('manual-select-clase').value;
+    const montoContainer = document.getElementById('manual-monto-container');
+    if (clase === 'COD') {
+      montoContainer.classList.remove('hidden');
+    } else {
+      montoContainer.classList.add('hidden');
+    }
+  }
+
+  async function obtenerDataAPITracking(numeroGuia) {
+    if (MODO_ENV === 'APK' && window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.CapacitorHttp) {
+      const { CapacitorHttp } = window.Capacitor.Plugins;
+      const response = await CapacitorHttp.post({
+        url: 'https://mrwve.com/api/tracking',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        data: { nro_tracking: numeroGuia }
+      });
+      return typeof response.data === 'string' ? JSON.parse(response.data) : response.data;
+    } else {
+      const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://mrwve.com/api/tracking');
+      const response = await fetch(proxyUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ nro_tracking: numeroGuia })
+      });
+      if (!response.ok) throw new Error(`Servidor inalcanzable (${response.status})`);
+      return await response.json();
+    }
+  }
+
+  async function procesarNotificacionManual() {
+    const guiaInput = document.getElementById('manual-input-guia').value.trim();
+    const telDestinatario = document.getElementById('manual-input-telefono').value.trim();
+    const clase = document.getElementById('manual-select-clase').value;
+    const montoInput = document.getElementById('manual-input-monto').value.trim().replace(/\./g, '').replace(',', '.');
+    const cuponesInput = document.getElementById('manual-input-cupones').value.trim();
+    const btn = document.getElementById('btn-manual-procesar');
+
+    if (!/^\d{15}$/.test(guiaInput)) {
+      return alert("El número de guía debe contener exactamente 15 dígitos.");
+    }
+    if (!telDestinatario) {
+      return alert("Debe ingresar el número de teléfono del destinatario.");
+    }
+    if (clase === 'COD' && (!montoInput || isNaN(parseFloat(montoInput)) || parseFloat(montoInput) <= 0)) {
+      return alert("Debe ingresar un monto a pagar válido para envíos COD.");
+    }
+
+    btn.disabled = true;
+    const textoOriginal = btn.innerHTML;
+    btn.innerHTML = `⏳ Consultando...`;
+
+    try {
+      const apiData = await obtenerDataAPITracking(guiaInput);
+
+      if (!apiData || (!apiData.nro_envio && !apiData.nro_tracking)) {
+        alert("No se encontraron registros para la guía en MRW.");
+        btn.disabled = false;
+        btn.innerHTML = textoOriginal;
+        return;
+      }
+
+      const pesoCalculado = apiData.peso || '0.00';
+      const destinatarioNombre = apiData.destinatario || 'Cliente';
+      const remitenteNombre = apiData.remitente || 'MRW Origen';
+
+      currentData = {
+        guia: apiData.nro_envio || guiaInput,
+        remitente_nombre: remitenteNombre,
+        remitente_telefono: '',
+        destinatario_nombre: destinatarioNombre,
+        destinatario_telefono: telDestinatario,
+        peso: pesoCalculado,
+        precio: clase === 'COD' ? parseFloat(montoInput).toFixed(2) : '0.00',
+        cupones: cuponesInput !== '' ? cuponesInput : '0'
+      };
+
+      resetearSeleccionesUI();
+      mostrarResultadosNotificacion(currentData);
+
+    } catch (err) {
+      alert("Error al conectar con la API de MRW: " + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = textoOriginal;
+    }
+  }
+
+  function toggleTheme() {
+    isDarkMode = !isDarkMode;
+    const body = document.getElementById('app-body');
+    const card = document.getElementById('main-card');
+    const toggleBtn = document.getElementById('theme-toggle-btn');
+    const title = document.getElementById('app-title');
+    const subtitle = document.getElementById('app-subtitle');
+    const headerContainer = document.getElementById('header-container');
+    const navContainer = document.getElementById('nav-container');
+
+    const scanTrigger = document.getElementById('scan-trigger-container');
+    const btnToggleManual = document.getElementById('btn-toggle-manual');
+    const manualForm = document.getElementById('manual-notificar-form');
+
+    const dataCard = document.getElementById('data-card-notificar');
+    const dataCardHeader = document.getElementById('data-card-header');
+    const dataCardFooter = document.getElementById('data-card-footer');
+    const configCard = document.getElementById('config-card-notificar');
+    const searchCard = document.getElementById('search-card');
+    const searchResultCard = document.getElementById('search-result-card');
+    const searchLoadingText = document.getElementById('search-loading-text');
+
+    const dividerLeft = document.getElementById('divider-search-left');
+    const dividerRight = document.getElementById('divider-search-right');
+    const btnScanBuscar = document.getElementById('btn-scan-buscar');
+
+    const footer = document.getElementById('app-footer');
+    const author = document.getElementById('app-author');
+
+    const inputs = document.querySelectorAll('.input-theme');
+    const textLabels = document.querySelectorAll('#lbl-manual-guia, #lbl-manual-tel, #lbl-manual-clase, #lbl-manual-monto, #lbl-manual-cupones, #lbl-clase, #lbl-tipo, #lbl-adicional, #lbl-buscar, #scan-subtitle, #res-remitente, #res-destinatario, #res-peso');
+
+    if (!isDarkMode) {
+      // ===== MODO DÍA =====
+      body.className = "bg-slate-100 min-h-screen p-4 text-slate-900 font-sans transition-colors duration-300";
+      card.className = "max-w-md mx-auto bg-white rounded-3xl shadow-xl border border-slate-200 p-5 space-y-4 transition-colors duration-300";
+      
+      toggleBtn.innerText = "☀️";
+      toggleBtn.className = "p-2 rounded-xl bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-600 transition flex items-center justify-center text-sm shadow";
+      
+      title.className = "text-xl font-extrabold tracking-wide text-slate-900";
+      subtitle.className = "text-[10px] text-slate-600 font-medium";
+      headerContainer.className = "flex items-center justify-between border-b border-slate-200 pb-3";
+      navContainer.className = "grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-2xl border border-slate-200";
+
+      scanTrigger.className = "p-5 text-center border-2 border-dashed border-blue-400/50 bg-blue-50/60 rounded-2xl space-y-3";
+      btnToggleManual.className = "w-full mt-2 border border-slate-300 hover:border-slate-400 bg-slate-50 hover:bg-slate-100 text-slate-800 font-semibold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-sm";
+      const manualOculto = manualForm.classList.contains('hidden');
+      manualForm.className = `${manualOculto ? 'hidden ' : ''}text-left bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-3 mt-3`;
+      dataCard.className = "bg-slate-50 p-4 rounded-2xl space-y-2 border border-slate-200 text-sm text-slate-800";
+      if (dataCardHeader) dataCardHeader.className = "flex justify-between border-b border-slate-200 pb-2";
+      if (dataCardFooter) dataCardFooter.className = "grid grid-cols-3 gap-2 pt-2 border-t border-slate-200 text-xs text-center";
+      
+      document.querySelectorAll('.stat-pill').forEach(el => {
+        el.className = "stat-pill bg-white p-1.5 rounded-lg border border-slate-200";
+      });
+
+      configCard.className = "bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-3";
+      searchCard.className = "bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-3";
+      searchResultCard.className = "hidden bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3 text-sm";
+      if (searchLoadingText) searchLoadingText.className = "text-xs text-slate-600 font-medium";
+
+      dividerLeft.className = "flex-grow border-t border-slate-200";
+      dividerRight.className = "flex-grow border-t border-slate-200";
+      btnScanBuscar.className = "w-full border border-blue-300 bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2";
+
+      footer.className = "text-center text-xs text-slate-700 font-semibold pt-3 border-t border-slate-200 transition-colors duration-300";
+      author.className = "text-slate-950 font-black text-sm tracking-wide";
+
+      // Inputs y Selects en Modo Claro
+      inputs.forEach(input => {
+        input.className = "input-theme w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 shadow-sm";
+      });
+
+      // Textos y Etiquetas
+      textLabels.forEach(el => {
+        el.classList.remove('text-slate-200', 'text-slate-300');
+        el.classList.add('text-slate-900', 'font-semibold');
+      });
+
+      // Botones de selección no activos
+      document.querySelectorAll('.btn-clase, .btn-tipo, .btn-adicional').forEach(btn => {
+        if (!btn.classList.contains('bg-blue-600')) {
+          btn.classList.remove('bg-slate-800', 'border-slate-700', 'text-slate-200');
+          btn.classList.add('bg-white', 'border-slate-300', 'text-slate-800');
+        }
+      });
+
+    } else {
+      // ===== MODO NOCTURNO =====
+      body.className = "bg-slate-900 min-h-screen p-4 text-slate-100 font-sans transition-colors duration-300";
+      card.className = "max-w-md mx-auto bg-slate-800 rounded-3xl shadow-2xl border border-slate-700/80 p-5 space-y-4 transition-colors duration-300";
+      
+      toggleBtn.innerText = "🌙";
+      toggleBtn.className = "p-2 rounded-xl bg-slate-700/80 hover:bg-slate-600 border border-slate-600 text-amber-400 transition flex items-center justify-center text-sm shadow";
+      
+      title.className = "text-xl font-extrabold tracking-wide text-white";
+      subtitle.className = "text-[10px] text-slate-400 font-medium";
+      headerContainer.className = "flex items-center justify-between border-b border-slate-700/60 pb-3";
+      navContainer.className = "grid grid-cols-2 gap-2 p-1 bg-slate-900/60 rounded-2xl border border-slate-700/60";
+
+      scanTrigger.className = "p-5 text-center border-2 border-dashed border-blue-500/30 bg-blue-950/30 rounded-2xl space-y-3";
+      btnToggleManual.className = "w-full mt-2 border border-slate-700 hover:border-slate-600 bg-slate-900/80 hover:bg-slate-900 text-slate-300 font-semibold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2 shadow";
+      const manualOculto = manualForm.classList.contains('hidden');
+      manualForm.className = `${manualOculto ? 'hidden ' : ''}text-left bg-slate-900/90 border border-slate-700/80 p-4 rounded-xl space-y-3 mt-3`;
+      dataCard.className = "bg-slate-900/80 p-4 rounded-2xl space-y-2 border border-slate-700/60 text-sm text-slate-100";
+      if (dataCardHeader) dataCardHeader.className = "flex justify-between border-b border-slate-800 pb-2";
+      if (dataCardFooter) dataCardFooter.className = "grid grid-cols-3 gap-2 pt-2 border-t border-slate-800 text-xs text-center";
+      
+      document.querySelectorAll('.stat-pill').forEach(el => {
+        el.className = "stat-pill bg-slate-800/50 p-1.5 rounded-lg border border-transparent";
+      });
+
+      configCard.className = "bg-slate-900/40 border border-slate-700/80 p-4 rounded-2xl space-y-3";
+      searchCard.className = "bg-slate-900/60 border border-slate-700/60 p-4 rounded-2xl space-y-3";
+      searchResultCard.className = "hidden bg-slate-900/80 p-4 rounded-2xl border border-slate-700/60 space-y-3 text-sm";
+      if (searchLoadingText) searchLoadingText.className = "text-xs text-slate-400 font-medium";
+
+      dividerLeft.className = "flex-grow border-t border-slate-800";
+      dividerRight.className = "flex-grow border-t border-slate-800";
+      btnScanBuscar.className = "w-full border border-blue-500/40 bg-blue-950/20 hover:bg-blue-900/40 text-blue-300 font-semibold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2";
+
+      footer.className = "text-center text-xs text-slate-300 font-medium pt-3 border-t border-slate-700/60 transition-colors duration-300";
+      author.className = "text-white font-extrabold text-sm tracking-wide";
+
+      // Inputs y Selects en Modo Oscuro
+      inputs.forEach(input => {
+        input.className = "input-theme w-full bg-slate-950/90 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500";
+      });
+
+      // Textos y Etiquetas
+      textLabels.forEach(el => {
+        el.classList.remove('text-slate-900');
+        el.classList.add('text-slate-200');
+      });
+
+      // Botones de selección no activos
+      document.querySelectorAll('.btn-clase, .btn-tipo, .btn-adicional').forEach(btn => {
+        if (!btn.classList.contains('bg-blue-600')) {
+          btn.classList.remove('bg-white', 'border-slate-300', 'text-slate-800');
+          btn.classList.add('bg-slate-800', 'border-slate-700', 'text-slate-200');
+        }
+      });
+    }
+  }
+
+  function aNombrePropio(texto) {
+    if (!texto) return '';
+    return texto.toLowerCase().replace(/(?:^|\s)\S/g, a => a.toUpperCase());
+  }
+
+  function formatearTelefonoVZLA(numero) {
+    if (!numero) return '';
+    let limpio = numero.replace(/[^0-9]/g, '');
+    if (limpio.startsWith('0')) {
+      limpio = '58' + limpio.substring(1);
+    } else if (!limpio.startsWith('58') && limpio.length === 10) {
+      limpio = '58' + limpio;
+    }
+    return limpio;
+  }
+
+  function obtenerTextoAdicional(opcion) {
+    const text_fijo = `Es importante que tome en cuenta que tiene un plazo de ${PLAZO_AGENCIA} hábiles para retirar su encomieda, de lo contrario será devuelta a la agencia de orígen.`;
+    if (opcion === 'DEVOLUCION') return "Su encomieda está pronta a ser devuelta a la agencia de orígen.";
+    if (opcion === 'FERIADO') {
+      const hoy = new Date();
+      const opcionesFecha = { weekday: 'long', day: '2-digit', month: 'long' };
+      let fechaFormateada = hoy.toLocaleDateString('es-ES', opcionesFecha);
+      fechaFormateada = fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
+      return `${text_fijo}\n\nHoy ${fechaFormateada} laboraremos hasta las 12:00 PM (medio día).`;
+    }
+    return `${text_fijo}`;
+  }
+
+  function restablecerEstadoInicialNotificar() {
+    currentData = null;
+
+    document.getElementById('scan-trigger-container').classList.remove('hidden');
+    document.getElementById('result-container-notificar').classList.add('hidden');
+    document.getElementById('reset-btn-notificar').classList.add('hidden');
+    document.getElementById('qr-error-container').classList.add('hidden');
+    document.getElementById('manual-notificar-form').classList.add('hidden');
+    
+    document.getElementById('manual-input-guia').value = '';
+    document.getElementById('manual-input-telefono').value = '';
+    document.getElementById('manual-input-monto').value = '';
+    document.getElementById('manual-input-cupones').value = '1';
+    document.getElementById('manual-select-clase').value = 'COD';
+    onManualClaseChange();
+    
+    resetearSeleccionesUI();
+  }
+
+  async function cambiarModulo(modulo) {
+    await detenerCamaraWeb();
+    const modNotificar = document.getElementById('modulo-notificar');
+    const modBuscar = document.getElementById('modulo-buscar');
+    const btnNotificar = document.getElementById('nav-btn-notificar');
+    const btnBuscar = document.getElementById('nav-btn-buscar');
+
+    if (modulo === 'notificar') {
+      restablecerEstadoInicialNotificar();
+
+      modNotificar.classList.remove('hidden');
+      modBuscar.classList.add('hidden');
+      btnNotificar.className = "py-2.5 px-3 text-xs font-bold rounded-xl bg-blue-600 text-white shadow-md transition flex items-center justify-center gap-1.5";
+      btnBuscar.className = `py-2.5 px-3 text-xs font-semibold rounded-xl ${isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'} transition flex items-center justify-center gap-1.5`;
+    } else {
+      const inputGuia = document.getElementById('input-buscar-guia');
+      if (inputGuia) {
+        inputGuia.value = '';
+        inputGuia.focus();
+      }
+
+      modNotificar.classList.add('hidden');
+      modBuscar.classList.remove('hidden');
+      btnBuscar.className = "py-2.5 px-3 text-xs font-bold rounded-xl bg-blue-600 text-white shadow-md transition flex items-center justify-center gap-1.5";
+      btnNotificar.className = `py-2.5 px-3 text-xs font-semibold rounded-xl ${isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'} transition flex items-center justify-center gap-1.5`;
+    }
+  }
+
+  async function detenerCamaraWeb() {
+    if (html5QrcodeScanner) {
+      try {
+        if (html5QrcodeScanner.isScanning) await html5QrcodeScanner.stop();
+      } catch (err) {
+        console.warn("Cámara inactiva:", err);
+      } finally {
+        html5QrcodeScanner = null;
+      }
+    }
+    document.getElementById('web-reader-notificar').classList.add('hidden');
+    document.getElementById('web-reader-buscar').classList.add('hidden');
+  }
+
+  async function escanearSegunEntorno(objetivo) {
+    await detenerCamaraWeb();
+    if (MODO_ENV === 'APK') {
+      iniciarEscanerNativo(objetivo);
+    } else {
+      iniciarEscanerWeb(objetivo);
+    }
+  }
+
+  async function iniciarEscanerNativo(objetivo) {
+    try {
+      const { BarcodeScanner } = window.Capacitor.Plugins;
+
+      const status = await BarcodeScanner.checkPermission({ force: true });
+      if (!status.granted) {
+        alert("Se requieren permisos de cámara para escanear.");
+        return;
+      }
+
+      BarcodeScanner.hideBackground();
+      document.body.classList.remove("bg-slate-900", "bg-slate-100");
+      document.body.classList.add("bg-transparent");
+      
+      document.getElementById("main-card").classList.add("hidden");
+      document.getElementById("scanner-overlay").classList.remove("hidden");
+
+      const result = await BarcodeScanner.startScan();
+
+      restaurarInterfazWeb();
+
+      if (result && result.hasContent) {
+        manejadorQRLeido(result.content, objetivo);
+      }
+    } catch (err) {
+      restaurarInterfazWeb();
+
+      const errorMsg = (err.message || JSON.stringify(err) || '').toLowerCase();
+      if (errorMsg.includes('canceled') || errorMsg.includes('cancelled') || errorMsg.includes('user canceled')) {
+        return;
+      }
+
+      alert("Error en cámara nativa: " + (err.message || JSON.stringify(err)));
+    }
+  }
+
+  async function detenerEscanerNativo() {
+    try {
+      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.BarcodeScanner) {
+        await window.Capacitor.Plugins.BarcodeScanner.stopScan();
+      }
+    } catch (e) {
+      console.warn("Deteniendo escáner:", e);
+    } finally {
+      restaurarInterfazWeb();
+    }
+  }
+
+  function restaurarInterfazWeb() {
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.BarcodeScanner) {
+      window.Capacitor.Plugins.BarcodeScanner.showBackground();
+    }
+    document.body.classList.remove("bg-transparent");
+    document.body.classList.add(isDarkMode ? "bg-slate-900" : "bg-slate-100");
+
+    document.getElementById("main-card").classList.remove("hidden");
+    document.getElementById("scanner-overlay").classList.add("hidden");
+  }
+
+  function iniciarEscanerWeb(objetivo) {
+    const divId = objetivo === 'notificar' ? 'web-reader-notificar' : 'web-reader-buscar';
+    const readerDiv = document.getElementById(divId);
+    readerDiv.classList.remove('hidden');
+
+    html5QrcodeScanner = new Html5Qrcode(divId);
+    html5QrcodeScanner.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: { width: 220, height: 220 } },
+      async (decodedText) => {
+        await detenerCamaraWeb();
+        manejadorQRLeido(decodedText, objetivo);
+      },
+      () => {}
+    ).catch(err => alert("Error abriendo cámara: " + err));
+  }
+
+  function esEnlaceURL(texto) {
+    const patronURL = /^(https?:\/\/|www\.)[^\s/$.?#].[^\s]*$/i;
+    return patronURL.test(texto.trim());
+  }
+
+  async function manejadorQRLeido(rawText, objetivo) {
+    const textoLimpio = rawText.trim();
+
+    if (esEnlaceURL(textoLimpio)) {
+      await manejarErrorEscaneo("No se admiten enlaces URL en las etiquetas.", objetivo);
+      return;
+    }
+
+    const dataParsed = parsearDataQR(rawText);
+
+    const esGuiaValida = dataParsed.guia && dataParsed.guia !== 'N/A' && dataParsed.guia.length >= 6;
+    if (!esGuiaValida) {
+      await manejarErrorEscaneo("QR no válido. Asegúrese de escanear una etiqueta de envío de MRW.", objetivo);
+      return;
+    }
+
+    if (objetivo === 'notificar') {
+      currentData = dataParsed;
+      resetearSeleccionesUI();
+      mostrarResultadosNotificacion(currentData);
+    } else if (objetivo === 'buscar') {
+      document.getElementById('input-buscar-guia').value = dataParsed.guia;
+      consultarAPI(dataParsed.guia);
+    }
+  }
+
+  async function manejarErrorEscaneo(mensaje, objetivo) {
+    alert("⚠️ " + mensaje);
+
+    if (MODO_ENV === 'APK') {
+      iniciarEscanerNativo(objetivo);
+    } else {
+      iniciarEscanerWeb(objetivo);
+    }
+  }
+
+  function buscarGuiaPorNumero() {
+    const inputEl = document.getElementById('input-buscar-guia');
+    const numGuia = inputEl.value.trim();
+
+    if (!/^\d{15}$/.test(numGuia)) {
+      return alert("El número de guía debe contener exactamente 15 dígitos.");
+    }
+
+    consultarAPI(numGuia);
+  }
+
+  async function consultarAPI(numeroGuia) {
+    const loading = document.getElementById('search-loading');
+    const card = document.getElementById('search-result-card');
+    loading.classList.remove('hidden');
+    card.classList.add('hidden');
+
+    try {
+      const data = await obtenerDataAPITracking(numeroGuia);
+
+      if (!data || (!data.nro_envio && !data.nro_tracking)) {
+        alert("No se encontraron registros para la guía especificada.");
+        loading.classList.add('hidden');
+        return;
+      }
+
+      renderizarDatosAPI(data);
+      loading.classList.add('hidden');
+      card.classList.remove('hidden');
+
+    } catch (error) {
+      loading.classList.add('hidden');
+      alert("Error de conexión con MRW: " + error.message);
+    }
+  }
+
+  function formatearFecha12H(fechaStr) {
+    if (!fechaStr || fechaStr === 'N/A') return 'N/A';
+    
+    const fechaObj = new Date(fechaStr.replace(/-/g, '/'));
+    if (isNaN(fechaObj.getTime())) return fechaStr;
+
+    const dia = String(fechaObj.getDate()).padStart(2, '0');
+    const mes = String(fechaObj.getMonth() + 1).padStart(2, '0');
+    const anio = fechaObj.getFullYear();
+
+    let horas = fechaObj.getHours();
+    const minutos = String(fechaObj.getMinutes()).padStart(2, '0');
+    const ampm = horas >= 12 ? 'PM' : 'AM';
+
+    horas = horas % 12;
+    horas = horas ? horas : 12;
+    const horasStr = String(horas).padStart(2, '0');
+
+    return `${dia}/${mes}/${anio} ${horasStr}:${minutos} ${ampm}`;
+  }
+
+  function renderizarDatosAPI(data) {
+    const card = document.getElementById('search-result-card');
+    
+    let modalidadTexto = "No especificado";
+    const desc = (data.descripcion || '').toUpperCase();
+    const tipo = (data.tipo_envio || '').toLowerCase();
+
+    const esCOD = desc === "CD" || tipo.includes("cobro") || tipo.includes("cod");
+
+    if (esCOD) {
+      modalidadTexto = "Cobro a Destino (COD)";
+    } else if (tipo.includes("pago en or")) {
+      modalidadTexto = "Pago en Origen (Pagado)";
+    } else if (data.tipo_envio) {
+      modalidadTexto = data.tipo_envio;
+    }
+
+    const tieneNumAlterno = data.num_alterno && data.num_alterno.trim() !== '' && data.num_alterno.trim().toUpperCase() !== 'N/A';
+    const badgeCasheaCorp = (tieneNumAlterno && !esCOD)
+      ? `<span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-purple-500/20 text-purple-600 dark:text-purple-300 border border-purple-500/40 ml-1">CASHEA / CORP</span>` 
+      : '';
+
+    const tipoPaqueteTexto = data.tipo_paquete ? (data.tipo_paquete.charAt(0).toUpperCase() + data.tipo_paquete.slice(1)) : "No especificado";
+
+    let ultimoEstatus = "Sin registro";
+    let fechaHoraUltimoEstatus = "N/A";
+    let etiquetaEstado = "CONSULTADO";
+    
+    if (Array.isArray(data.tracking) && data.tracking.length > 0) {
+      const ultimoMovimiento = data.tracking[data.tracking.length - 1];
+      etiquetaEstado = ultimoMovimiento.estatus || "CONSULTADO";
+      const ubicacion = ultimoMovimiento.agencia || ultimoMovimiento.estado || '';
+      ultimoEstatus = `${ultimoMovimiento.estatus} ${ubicacion ? '— ' + ubicacion : ''}`;
+      
+      const rawFecha = ultimoMovimiento.fecha || ultimoMovimiento.fecha_scan || "N/A";
+      fechaHoraUltimoEstatus = formatearFecha12H(rawFecha);
+    }
+
+    const bgBox = isDarkMode ? "bg-slate-800/40" : "bg-slate-100 border border-slate-200";
+    const bgDesc = isDarkMode ? "bg-slate-800/30 border border-slate-700/40" : "bg-slate-100 border border-slate-200";
+    const bgStatus = isDarkMode ? "bg-blue-950/40 border border-blue-500/30" : "bg-blue-50 border border-blue-200";
+    const textPrincipal = isDarkMode ? "text-slate-200" : "text-slate-900";
+    const borderSep = isDarkMode ? "border-slate-800" : "border-slate-200";
+
+    card.innerHTML = `
+      <div class="flex justify-between items-center border-b ${borderSep} pb-2">
+        <div>
+          <p class="text-[10px] text-slate-400 font-bold uppercase">N° de Guía</p>
+          <p class="font-black text-blue-500 tracking-wider text-base">${data.nro_envio}</p>
+        </div>
+        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30">
+          ${etiquetaEstado.toUpperCase()}
+        </span>
+      </div>
+      
+      <div class="grid grid-cols-2 gap-2 text-xs pt-1">
+        <div class="${bgBox} p-2 rounded-xl">
+          <p class="text-[10px] text-slate-400 font-bold uppercase">Tipo / Peso</p>
+          <p class="${textPrincipal} font-semibold">📦 ${tipoPaqueteTexto} (${data.peso || '0'} Kg)</p>
+        </div>
+        <div class="${bgBox} p-2 rounded-xl">
+          <p class="text-[10px] text-slate-400 font-bold uppercase">Modalidad</p>
+          <p class="text-amber-500 dark:text-amber-400 font-semibold flex items-center flex-wrap">
+            💳 ${modalidadTexto} ${badgeCasheaCorp}
+          </p>
+        </div>
+      </div>
+
+      ${data.descripcion && data.descripcion !== "CD" ? `
+      <div class="${bgDesc} p-2 rounded-xl text-xs space-y-0.5">
+        <p class="text-[10px] text-slate-400 font-bold uppercase">Descripción de Mercancía:</p>
+        <p class="${textPrincipal} font-medium leading-relaxed">${data.descripcion}</p>
+      </div>
+      ` : ''}
+
+      <div class="space-y-0.5 text-xs">
+        <p class="text-[10px] text-slate-400 font-bold uppercase">Destinatario:</p>
+        <p class="${textPrincipal} font-medium">${aNombrePropio(data.destinatario) || 'N/A'}</p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 text-xs border-t ${borderSep} pt-2">
+        <div>
+          <p class="text-slate-400 font-semibold text-[10px] uppercase">Origen</p>
+          <p class="${isDarkMode ? 'text-slate-300' : 'text-slate-700'} font-medium truncate">${data.agencia_origen || 'N/A'}</p>
+        </div>
+        <div>
+          <p class="text-slate-400 font-semibold text-[10px] uppercase">Destino</p>
+          <p class="${isDarkMode ? 'text-slate-300' : 'text-slate-700'} font-medium truncate">${data.agencia_destino || 'N/A'}</p>
+        </div>
+      </div>
+
+      <div class="${bgStatus} p-2.5 rounded-xl space-y-1 text-xs">
+        <div class="flex justify-between items-center">
+          <p class="text-[10px] ${isDarkMode ? 'text-blue-300' : 'text-blue-700'} font-bold uppercase">Último Movimiento Registrado:</p>
+          <p class="text-[10px] text-slate-400 font-mono">${fechaHoraUltimoEstatus}</p>
+        </div>
+        <p class="${textPrincipal} font-semibold">${ultimoEstatus}</p>
+      </div>
+    `;
+  }
+
+  function parsearDataQR(cadena) {
+    const limpio = cadena.trim();
+    const lineas = limpio.split('\n');
+    const datosLinea = lineas[lineas.length - 1].trim();
+    const columnas = datosLinea.split(';');
+
+    if (columnas.length > 25) {
+      return {
+        guia: columnas[0] || 'N/A',
+        remitente_nombre: columnas[3] || 'Remitente',
+        remitente_telefono: columnas[4] || '',
+        destinatario_nombre: columnas[8] || 'Destinatario',
+        destinatario_telefono: columnas[9] || '',
+        peso: columnas[22] || '0.00',
+        precio: columnas[29] || '0.00',
+        cupones: columnas[30] || '0'
+      };
+    }
+
+    try {
+      const json = JSON.parse(cadena);
+      return {
+        guia: json.guia || json.tracking || 'N/A',
+        remitente_nombre: json.remitente || 'Remitente',
+        remitente_telefono: json.remitente_telefono || '',
+        destinatario_nombre: json.destinatario || json.nombre || 'Cliente',
+        destinatario_telefono: json.telefono || json.destinatario_telefono || '',
+        peso: json.peso || '0.00',
+        precio: json.precio || '0.00',
+        cupones: json.cupones || '0'
+      };
+    } catch (e) {
+      return {
+        guia: limpio,
+        remitente_nombre: 'Remitente',
+        remitente_telefono: '',
+        destinatario_nombre: 'Cliente',
+        destinatario_telefono: '',
+        peso: '0.00',
+        precio: '0.00',
+        cupones: '0'
+      };
+    }
+  }
+
+  function resetearSeleccionesUI() {
+    claseSeleccionada = null;
+    tipoSeleccionado = null;
+    adicionalSeleccionado = null;
+
+    document.querySelectorAll('.btn-clase, .btn-tipo, .btn-adicional').forEach(btn => {
+      btn.classList.remove('bg-blue-600', 'text-white', 'font-bold');
+      if (isDarkMode) {
+        btn.classList.remove('bg-white', 'border-slate-300', 'text-slate-800');
+        btn.classList.add('bg-slate-800', 'border-slate-700', 'text-slate-200');
+      } else {
+        btn.classList.remove('bg-slate-800', 'border-slate-700', 'text-slate-200');
+        btn.classList.add('bg-white', 'border-slate-300', 'text-slate-800');
+      }
+    });
+
+    validarYActualizarBotones();
+  }
+
+  function seleccionarClase(v) { 
+    claseSeleccionada = v; 
+    actualizarGrupoUI('#group-clase .btn-clase', v); 
+  }
+  
+  function seleccionarTipo(v) { 
+    tipoSeleccionado = v; 
+    actualizarGrupoUI('#group-tipo .btn-tipo', v); 
+  }
+  
+  function seleccionarAdicional(v) { 
+    adicionalSeleccionado = v; 
+    actualizarGrupoUI('#group-adicional .btn-adicional', v); 
+  }
+
+  function actualizarGrupoUI(selector, valorBuscado) {
+    document.querySelectorAll(selector).forEach(btn => {
+      const matchExacto = btn.getAttribute('onclick').includes(`'${valorBuscado}'`);
+      if (matchExacto) {
+        btn.classList.remove('bg-slate-800', 'bg-white', 'border-slate-700', 'border-slate-300', 'text-slate-200', 'text-slate-800');
+        btn.classList.add('bg-blue-600', 'text-white', 'font-bold');
+      } else {
+        btn.classList.remove('bg-blue-600', 'text-white', 'font-bold');
+        if (isDarkMode) {
+          btn.classList.add('bg-slate-800', 'border-slate-700', 'text-slate-200');
+        } else {
+          btn.classList.add('bg-white', 'border-slate-300', 'text-slate-800');
+        }
+      }
+    });
+    validarYActualizarBotones();
+  }
+
+  function mostrarResultadosNotificacion(data) {
+    document.getElementById('res-guia').innerText = data.guia;
+    document.getElementById('res-remitente').innerText = aNombrePropio(data.remitente_nombre);
+    document.getElementById('res-tel-remitente').innerText = data.remitente_telefono || 'Sin teléfono';
+    document.getElementById('res-destinatario').innerText = aNombrePropio(data.destinatario_nombre);
+    document.getElementById('res-tel-destinatario').innerText = data.destinatario_telefono || 'Sin teléfono';
+    document.getElementById('res-peso').innerText = `${data.peso} Kg`;
+    document.getElementById('res-precio').innerText = `Bs. ${data.precio}`;
+    document.getElementById('res-cupones').innerText = data.cupones;
+
+    validarYActualizarBotones();
+    document.getElementById('result-container-notificar').classList.remove('hidden');
+    document.getElementById('scan-trigger-container').classList.add('hidden');
+    document.getElementById('reset-btn-notificar').classList.remove('hidden');
+  }
+
+  function validarYActualizarBotones() {
+    const actions = document.getElementById('actions-container');
+    const alerta = document.getElementById('alerta-seleccion');
+
+    if (!claseSeleccionada || !tipoSeleccionado || !adicionalSeleccionado) {
+      actions.classList.add('opacity-40', 'pointer-events-none');
+      alerta.classList.remove('hidden');
+      actions.innerHTML = '';
+      return;
+    }
+
+    actions.classList.remove('opacity-40', 'pointer-events-none');
+    alerta.classList.add('hidden');
+    generarBotonesMensajeria(currentData, claseSeleccionada, tipoSeleccionado, adicionalSeleccionado);
+  }
+
+  function generarBotonesMensajeria(data, claseEnvio, tipoEnvio, adicionalEnvio) {
+    const actions = document.getElementById('actions-container');
+    actions.innerHTML = '';
+
+    const guiaCorta = data.guia ? data.guia.toString().slice(0, 2) : 'N/A';
+    const nombreDestinatario = limpiarNombreDestinatario(data.destinatario_nombre);
+    const nombreRemitente = aNombrePropio(data.remitente_nombre);
+
+    let detallesPaquete = `• Peso: ${data.peso} Kg`;
+    if (claseEnvio === 'COD') detallesPaquete += `\n• Monto a pagar: Bs. ${data.precio}`;
+    if (claseEnvio === 'COD' || claseEnvio === 'PAGADO') detallesPaquete += `\n• Cupones: ${data.cupones}`;
+
+    const textoExtra = obtenerTextoAdicional(adicionalEnvio);
+    if (textoExtra) detallesPaquete += `\n\n📌 ${textoExtra.trim()}`;
+
+    const tipoYClase = `${tipoEnvio} (${claseEnvio})`;
+
+    if (data.destinatario_telefono) {
+      const phoneDest = formatearTelefonoVZLA(data.destinatario_telefono);
+
+      const plantillaWA_Dest = `¡Feliz y bendecido día ☀! \n\nEstimad@ *${nombreDestinatario}*, le escribimos de *MRW ${NAME_AGENCIA}*\nEstamos ubicados 📌 en la ${ADDRESS_AGENCIA} y laboramos 🕕 horario corrido desde 08:00 AM hasta las 04:50 PM.\n\nNos complace informarle que su encomieda de tipo *${tipoYClase}* con guía 🏷️ *${guiaCorta}* se encuentra lista para ser retirada en oficina.\n\n📋 *Detalles del envío:*\n${detallesPaquete}\n\n`;
+
+      const plantillaSMS_Dest = `¡Feliz y bendecido día! \n\nEstimad@ ${nombreDestinatario}, le escribimos de MRW ${NAME_AGENCIA}\nEstamos ubicados en la ${ADDRESS_AGENCIA} y laboramos horario corrido desde 08:00 AM hasta las 04:50 PM.\n\nNos complace informarle que su encomieda de tipo ${tipoYClase} con guía ${guiaCorta} se encuentra lista para ser retirada en oficina.\n\nDetalles del envío:\n${detallesPaquete}\n\n`;
+
+      actions.appendChild(crearBotonApp(`💬 WhatsApp Destinatario`, `https://wa.me/${phoneDest}?text=${encodeURIComponent(plantillaWA_Dest)}`, 'bg-emerald-600 hover:bg-emerald-500 text-white'));
+      actions.appendChild(crearBotonApp(`📱 SMS Destinatario`, `sms:${phoneDest}?body=${encodeURIComponent(plantillaSMS_Dest)}`, 'bg-blue-600 hover:bg-blue-500 text-white'));
+    }
+
+    if (data.remitente_telefono) {
+      const phoneRem = formatearTelefonoVZLA(data.remitente_telefono);
+      const plantillaWA_Rem = `Hola ${nombreRemitente}, le escribimos de MRW El Tigre Centro.\n\nLe notificamos que el envío *${tipoYClase}* con guía 🏷️ *${guiaCorta}* consignado a *${nombreDestinatario}* no fue retirado y ha sido devuelto a origen.\n\n📋 *Detalles del envío:*\n${detallesPaquete}`;
+
+      actions.appendChild(crearBotonApp(`💬 WhatsApp Remitente`, `https://wa.me/${phoneRem}?text=${encodeURIComponent(plantillaWA_Rem)}`, 'bg-teal-600 hover:bg-teal-500 text-white'));
+    }
+  }
+
+  function crearBotonApp(texto, url, clasesColor) {
+    const btn = document.createElement('a');
+    btn.href = url;
+    btn.target = "_blank";
+    btn.className = `w-full font-bold py-3 px-4 rounded-xl text-center shadow-lg flex items-center justify-center gap-2 transition text-sm ${clasesColor}`;
+    btn.innerHTML = texto;
+    return btn;
+  }
+
+  function reiniciarNotificador() {
+    restablecerEstadoInicialNotificar();
+    escanearSegunEntorno('notificar');
+  }
+
+  isDarkMode = true; // Se define en true temporalmente para que toggleTheme() la pase a false y aplique los estilos claros
+  toggleTheme();
+  restablecerEstadoInicialNotificar();
+  </script>
+</body>
+</html>
