@@ -1,6 +1,6 @@
 {
-  "code_agencia": "03020",
-  "name_agencia": "El Tigre",
-  "address_agencia": "Av. Francisco de Miranda con Calle 18 Sur, Edif Los Geranios, al lado de la Panadería Siria",
-  "plazo_agencia": "7 días"
+  "code_agencia": "00000",
+  "name_agencia": "Prueba Centro",
+  "address_agencia": "Calle Prueba, CC Genérico detrás de la Plaza Prueba",
+  "plazo_agencia": "0 días"
 }

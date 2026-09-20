@@ -68,7 +68,7 @@
           
           <div>
             <label class="field-label">N° de Guía:</label>
-            <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="15" id="manual-input-guia" oninput="this.value = this.value.replace(/[^0-9]/g, '')" placeholder="000000000000000" autocomplete="off" class="input-control" style="font-size: 1.25rem; font-weight: 800; text-align: center; letter-spacing: 0.1em;">
+            <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="15" id="manual-input-guia" oninput="this.value = this.value.replace(/[^0-9]/g, '')" placeholder="000000000000000" autocomplete="off" class="input-control" style="font-size: 1.25rem; font-weight: 700; text-align: center; letter-spacing: 0.1em;">
           </div>
 
           <div>
@@ -689,6 +689,13 @@
     if (!/^\d{15}$/.test(guiaInput)) {
       return alert("El número de guía debe contener exactamente 15 dígitos.");
     }
+
+    // ALERTA DE AGENCIA INCORRECTA
+    const codigoEnGuia = guiaInput.substring(5, 10);
+    if (codigoEnGuia !== CODE_AGENCIA) {
+      alert(`⚠️ La encomienda a la que quiere notificar no está destinada a ${CODE_AGENCIA} ${NAME_AGENCIA}`);
+    }
+
     if (!telDestinatario) {
       return alert("Debe ingresar el número de teléfono del destinatario.");
     }
@@ -884,6 +891,14 @@
     }
 
     if (objetivo === 'notificar') {
+      // NUEVA ALERTA PARA NOTIFICAR (ESCANEO)
+      if (dataParsed.guia && dataParsed.guia.length === 15) {
+        const codigoEnGuia = dataParsed.guia.substring(5, 10);
+        if (codigoEnGuia !== CODE_AGENCIA) {
+          alert(`⚠️ La encomienda a la que quiere notificar no está destinada a ${CODE_AGENCIA} ${NAME_AGENCIA}`);
+        }
+      }
+      
       currentData = dataParsed;
       resetearSeleccionesUI();
       mostrarResultadosNotificacion(currentData);
@@ -1214,9 +1229,9 @@
     if (data.destinatario_telefono) {
       const phoneDest = formatearTelefonoVZLA(data.destinatario_telefono);
 
-      const plantillaWA_Dest = `¡Feliz y bendecido día ☀! \n\nEstimad@ *${nombreDestinatario}*, le escribimos de *MRW ${NAME_AGENCIA}*\nEstamos ubicados 📌 en la ${ADDRESS_AGENCIA} y laboramos 🕕 horario corrido desde 08:00 AM hasta las 04:50 PM.${txtUbicacionEnlace}\n\nNos complace informarle que su encomieda de tipo *${tipoYClase}* con guía 🏷️ *${guiaCorta}* se encuentra lista para ser retirada en oficina.\n\n📋 *Detalles del envío:*\n${detallesPaquete}\n\n`;
+      const plantillaWA_Dest = `¡Feliz y bendecido día ☀! \n\nEstimad@ *${nombreDestinatario}*, le escribimos de *MRW ${NAME_AGENCIA}*\nEstamos ubicados 📌 en ${ADDRESS_AGENCIA} y laboramos 🕕 horario corrido desde 08:00 AM hasta las 04:50 PM.${txtUbicacionEnlace}\n\nNos complace informarle que su encomieda de tipo *${tipoYClase}* con guía 🏷️ *${guiaCorta}* se encuentra lista para ser retirada en oficina.\n\n📋 *Detalles del envío:*\n${detallesPaquete}\n\n`;
 
-      const plantillaSMS_Dest = `¡Feliz y bendecido día! \n\nEstimad@ ${nombreDestinatario}, le escribimos de MRW ${NAME_AGENCIA}\nEstamos ubicados en la ${ADDRESS_AGENCIA} y laboramos horario corrido desde 08:00 AM hasta las 04:50 PM.\n\nNos complace informarle que su encomieda de tipo ${tipoYClase} con guía ${guiaCorta} se encuentra lista para ser retirada en oficina.\n\nDetalles del envío:\n${detallesPaquete}\n\n`;
+      const plantillaSMS_Dest = `¡Feliz y bendecido día! \n\nEstimad@ ${nombreDestinatario}, le escribimos de MRW ${NAME_AGENCIA}\nEstamos ubicados en ${ADDRESS_AGENCIA} y laboramos horario corrido desde 08:00 AM hasta las 04:50 PM.\n\nNos complace informarle que su encomieda de tipo ${tipoYClase} con guía ${guiaCorta} se encuentra lista para ser retirada en oficina.\n\nDetalles del envío:\n${detallesPaquete}\n\n`;
 
       actions.appendChild(crearBotonApp(`💬 WhatsApp Destinatario`, `https://wa.me/${phoneDest}?text=${encodeURIComponent(plantillaWA_Dest)}`, 'btn-whatsapp'));
       actions.appendChild(crearBotonApp(`📱 SMS Destinatario`, `sms:${phoneDest}?body=${encodeURIComponent(plantillaSMS_Dest)}`, 'btn-sms'));
@@ -1224,7 +1239,7 @@
 
     if (data.remitente_telefono) {
       const phoneRem = formatearTelefonoVZLA(data.remitente_telefono);
-      const plantillaWA_Rem = `Hola ${nombreRemitente}, le escribimos de MRW ${NAME_AGENCIA}.\n\nLe notificamos que el envío *${tipoYClase}* con guía 🏷️ *${guiaCorta}* consignado a *${nombreDestinatario}* no fue retirado y ha sido devuelto a origen.\n\n📋 *Detalles del envío:*\n${detallesPaquete}`;
+      const plantillaWA_Rem = `¡Feliz y bendecido día ☀! \n\nEstimad@ *${nombreRemitente}*, le escribimos de MRW ${NAME_AGENCIA}.\n\nLe notificamos que el envío *${tipoYClase}* que realizó con guía 🏷️ *${guiaCorta}* consignado a *${nombreDestinatario}* no fue retirado y ha sido devuelto a nuestra agencia, debe pasar retirando la encomienda.\n\n📋 *Detalles del envío:*\n${detallesPaquete}`;
 
       actions.appendChild(crearBotonApp(`💬 WhatsApp Remitente`, `https://wa.me/${phoneRem}?text=${encodeURIComponent(plantillaWA_Rem)}`, 'btn-remitente'));
     }
