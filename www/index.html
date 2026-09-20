@@ -1239,7 +1239,7 @@
 
     if (data.remitente_telefono) {
       const phoneRem = formatearTelefonoVZLA(data.remitente_telefono);
-      const plantillaWA_Rem = `¡Feliz y bendecido día ☀! \n\nEstimad@ *${nombreRemitente}*, le escribimos de MRW ${NAME_AGENCIA}.\n\nLe notificamos que el envío *${tipoYClase}* que realizó con guía 🏷️ *${guiaCorta}* consignado a *${nombreDestinatario}* no fue retirado y ha sido devuelto a nuestra agencia, debe pasar retirando la encomienda.\n\n📋 *Detalles del envío:*\n${detallesPaquete}`;
+      const plantillaWA_Rem = `¡Feliz y bendecido día ☀! \n\nEstimad@ *${nombreRemitente}*, le escribimos de MRW ${NAME_AGENCIA}.\n\nLe notificamos que el envío *${tipoYClase}* que realizó con guía 🏷️ *${guiaCorta}* consignado a *${nombreDestinatario}* no fue retirado y ha sido devuelto a nuestra agencia, debe pasar retirando la encomienda.\n`;
 
       actions.appendChild(crearBotonApp(`💬 WhatsApp Remitente`, `https://wa.me/${phoneRem}?text=${encodeURIComponent(plantillaWA_Rem)}`, 'btn-remitente'));
     }
